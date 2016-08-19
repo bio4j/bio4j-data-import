@@ -1,3 +1,4 @@
+<!-- Official UniProt schema, with added comments related to our model and import process -->
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- *****************************************************************************
 	UniProt Knowledgebase
@@ -41,7 +42,7 @@
                 <xs:element name="name" type="xs:string" maxOccurs="unbounded"/>
                 <!-- This element has the protein name/s *and* the ENZYME cross-ref -->
                 <xs:element name="protein" type="proteinType"/>
-                <!-- A gene name, without any cross-ref -->
+                <!-- A gene name, without any cross-ref. Corresponds to a protein property -->
                 <xs:element name="gene" type="geneType" minOccurs="0" maxOccurs="unbounded"/>
                 <!-- contains the NCBI taxonomy cross-ref. Important! -->
                 <xs:element name="organism" type="organismType"/>
@@ -49,13 +50,13 @@
                 <xs:element name="organismHost" type="organismType" minOccurs="0" maxOccurs="unbounded"/>
                 <!-- This goes into a property, we have an enum for it. -->
                 <xs:element name="geneLocation" type="geneLocationType" minOccurs="0" maxOccurs="unbounded"/>
-                <!-- citations. We are not importing/modeling this for now. -->
+                <!-- References are articles, books, etc. We are not importing/modeling this for now. -->
                 <xs:element name="reference" type="referenceType" maxOccurs="unbounded"/>
                 <!-- comments are annotations with a funny format -->
                 <xs:element name="comment" type="commentType" nillable="true" minOccurs="0" maxOccurs="unbounded"/>
                 <!-- these are cross-refs. -->
                 <xs:element name="dbReference" type="dbReferenceType" minOccurs="0" maxOccurs="unbounded"/>
-                <!-- A property, how reliable is this protein -->
+                <!-- A property, how reliable is this protein. There's an enum for the values. -->
                 <xs:element name="proteinExistence" type="proteinExistenceType"/>
                 <!-- This will correspond to an edge. We can import all keywords beforehand, there's a file with that. -->
                 <xs:element name="keyword" type="keywordType" minOccurs="0" maxOccurs="unbounded"/>
