@@ -3,7 +3,16 @@
 ## Genes
 
 - Gene names are far from unique. For example, there are 12 entries (thus at leasat 12 isoforms) with primary gene name `APP`.
--
+- *Different* genes can be connected with the same protein. Quoting from [Uniprot help - gene name](http://www.uniprot.org/help/gene_name):
+
+    > It can happen that multiple genes can be translated to produce identical proteins in one species. In such cases, all gene products were historically often merged into a single UniProtKB entry and there are as many ‘Name’ tokens in the ‘Gene names’ subsection as the number of genes encoding the protein of interest, e.g. [P68431](http://www.uniprot.org/uniprot/P68431#names_and_taxonomy). However, we tend to demerge many of these entries, and for newly annotated proteins we generate separate sequence entries in case of multiple genes coding for identical protein sequences, e.g. [P08409](http://www.uniprot.org/uniprot/?query=replaces:P08409).
+
+    this means that in the data there will be several gene name elements.
+
+See also
+
+- [UniProt help - gene symbols to UniProt identifiers](http://www.uniprot.org/help/gene_symbol_mapping)
+- [UniProt help - mappings to NCBI GeneID and RefSeq ](http://www.uniprot.org/help/ncbi_mappings)
 
 ## Isoforms
 
@@ -28,7 +37,6 @@ For now see
 - [Subcellular locations to GO terms mapping](http://geneontology.org/external2go/uniprotkb_sl2go)
 - [Subcellular locations docs](http://www.uniprot.org/docs/subcell)
 - [Subcellular locations help](http://www.uniprot.org/help/subcellular_location)
-
 
 ## General references
 
