@@ -107,6 +107,8 @@ class Bio4jdataimportTest extends FunSuite {
     val entryXMLAgain = scalaxb.toXML[Entry](entry, entry.toString, defaultScope)
     val entryAgain = scalaxb.fromXML[Entry](entryXMLAgain)
 
+    println { entry.sequence.value }
+
     assert(
 
       entry === entryAgain
