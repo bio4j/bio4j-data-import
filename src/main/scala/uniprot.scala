@@ -152,8 +152,7 @@ case class Keyword[V,E](val graph: UniProtGraph[V,E]) {
   )
 
   val stringToKeywordCategory: String => UniProtGraph.KeywordCategories =
-    string => string match {
-
+    {
       case "Biological process"         => UniProtGraph.KeywordCategories.biologicalProcess
       case "Cellular component"         => UniProtGraph.KeywordCategories.cellularComponent
       case "Coding sequence diversity"  => UniProtGraph.KeywordCategories.codingSequenceDiversity
@@ -165,5 +164,52 @@ case class Keyword[V,E](val graph: UniProtGraph[V,E]) {
       case "null"                       => ??? // TODO do something with this
       case "PTM"                        => UniProtGraph.KeywordCategories.PTM
       case "Technical term"             => UniProtGraph.KeywordCategories.technicalTerm
+    }
+}
+
+case class Feature[V,E](val graph: UniProtGraph[V,E]) {
+
+
+  val stringToFeatureType: String => UniProtGraph.FeatureTypes =
+    {
+      case "active site"                          => UniProtGraph.FeatureTypes.activeSite
+      case "binding site"                         => UniProtGraph.FeatureTypes.bindingSite
+      case "calcium-binding region"               => UniProtGraph.FeatureTypes.calciumBindingRegion
+      case "chain"                                => UniProtGraph.FeatureTypes.chain
+      case "coiled-coil region"                   => UniProtGraph.FeatureTypes.coiledCoilRegion
+      case "compositionally biased region"        => UniProtGraph.FeatureTypes.compositionallyBiasedRegion
+      case "cross-link"                           => UniProtGraph.FeatureTypes.crosslink
+      case "disulfide bond"                       => UniProtGraph.FeatureTypes.disulfideBond
+      case "DNA-binding region"                   => UniProtGraph.FeatureTypes.DNABindingRegion
+      case "domain"                               => UniProtGraph.FeatureTypes.domain
+      case "glycosylation site"                   => UniProtGraph.FeatureTypes.glycosylationSite
+      case "helix"                                => UniProtGraph.FeatureTypes.helix
+      case "initiator methionine"                 => UniProtGraph.FeatureTypes.initiatorMethionine
+      case "lipid moiety-binding region"          => UniProtGraph.FeatureTypes.lipidMoietyBindingRegion
+      case "metal ion-binding site"               => UniProtGraph.FeatureTypes.metalIonBindingSite
+      case "modified residue"                     => UniProtGraph.FeatureTypes.modifiedResidue
+      case "mutagenesis site"                     => UniProtGraph.FeatureTypes.mutagenesisSite
+      case "non-consecutive residues"             => UniProtGraph.FeatureTypes.nonConsecutiveResidues
+      case "non-terminal residue"                 => UniProtGraph.FeatureTypes.nonTerminalResidue
+      case "nucleotide phosphate-binding region"  => UniProtGraph.FeatureTypes.nucleotidePhosphateBindingRegion
+      case "peptide"                              => UniProtGraph.FeatureTypes.peptide
+      case "propeptide"                           => UniProtGraph.FeatureTypes.propeptide
+      case "region of interest"                   => UniProtGraph.FeatureTypes.regionOfInterest
+      case "repeat"                               => UniProtGraph.FeatureTypes.repeat
+      case "non-standard amino acid"              => UniProtGraph.FeatureTypes.nonstandardAminoAcid
+      case "sequence conflict"                    => UniProtGraph.FeatureTypes.sequenceConflict
+      case "sequence variant"                     => UniProtGraph.FeatureTypes.sequenceVariant
+      case "short sequence motif"                 => UniProtGraph.FeatureTypes.shortSequenceMotif
+      case "signal peptide"                       => UniProtGraph.FeatureTypes.signalPeptide
+      case "site"                                 => UniProtGraph.FeatureTypes.site
+      case "splice variant"                       => UniProtGraph.FeatureTypes.spliceVariant
+      case "strand"                               => UniProtGraph.FeatureTypes.strand
+      case "topological domain"                   => UniProtGraph.FeatureTypes.topologicalDomain
+      case "transit peptide"                      => UniProtGraph.FeatureTypes.transitPeptide
+      case "transmembrane region"                 => UniProtGraph.FeatureTypes.transmembraneRegion
+      case "turn"                                 => UniProtGraph.FeatureTypes.turn
+      case "unsure residue"                       => UniProtGraph.FeatureTypes.unsureResidue
+      case "zinc finger region"                   => UniProtGraph.FeatureTypes.zincFingerRegion
+      case "intramembrane region"                 => UniProtGraph.FeatureTypes.intramembraneRegion
     }
 }
