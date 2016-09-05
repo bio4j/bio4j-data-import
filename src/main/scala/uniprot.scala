@@ -12,6 +12,9 @@ case object Entry {
   implicit def asXML: Entry => Elem = _.xml
 }
 
+// from keywords-all.tsv
+case class KeywordRow(val id: String, val description: String, val category: String)
+
 case class CanonicalProtein[V,E](val graph: UniProtGraph[V,E]) {
 
   type G = UniProtGraph[V,E]
@@ -132,4 +135,35 @@ case class Comment[V,E](val graph: UniProtGraph[V,E]) {
 
   val stringToCommentTopic: String => UniProtGraph.CommentTopics =
     ??? // TODO match big enum
+}
+
+case class Keyword[V,E](val graph: UniProtGraph[V,E]) {
+
+  val fromRow = AddVertex.generically[V,E](
+    graph,
+    graph.keyword,
+    (row: KeywordRow, g: UniProtGraph[V,E]) =>
+      Seq(
+        g.keyword.addVertex
+          .set(g.keyword.name, row.id)
+          .set(g.keyword.definition, row.description)
+          .set(g.keyword.category, stringToKeywordCategory(row.category))
+      )
+  )
+
+  val stringToKeywordCategory: String => UniProtGraph.KeywordCategories =
+    string => string match {
+
+      case "Biological process"         => UniProtGraph.KeywordCategories.biologicalProcess
+      case "Cellular component"         => UniProtGraph.KeywordCategories.cellularComponent
+      case "Coding sequence diversity"  => UniProtGraph.KeywordCategories.codingSequenceDiversity
+      case "Developmental stage"        => UniProtGraph.KeywordCategories.developmentalStage
+      case "Disease"                    => UniProtGraph.KeywordCategories.disease
+      case "Domain"                     => UniProtGraph.KeywordCategories.domain
+      case "Ligand"                     => UniProtGraph.KeywordCategories.ligand
+      case "Molecular function"         => UniProtGraph.KeywordCategories.molecularFunction
+      case "null"                       => ??? // TODO do something with this
+      case "PTM"                        => UniProtGraph.KeywordCategories.PTM
+      case "Technical term"             => UniProtGraph.KeywordCategories.technicalTerm
+    }
 }
