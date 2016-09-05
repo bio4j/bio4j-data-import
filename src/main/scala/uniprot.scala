@@ -80,7 +80,16 @@ case class GeneName[V,E](val graph: UniProtGraph[V,E]) {
     (entry: Entry, g: UniProtGraph[V,E]) =>
       nameFromEntry(entry)
         .fold( Seq[UniProtGraph[V,E]#GeneName]() ) {
-          _ => Seq(g.geneName.addVertex) // TODO add gene name property; missing in bio4j/bio4j
+          name =>
+            g.geneName.name.index.find(name).asScala
+              .fold(
+                Seq(
+                  g.geneName.addVertex
+                    .set(g.geneName.name, name)
+                )
+              ){
+                Seq(_)
+              }
         }
   )
 
@@ -119,12 +128,11 @@ case class Comment[V,E](val graph: UniProtGraph[V,E]) {
       val proteinOpt =
         graph.protein.accession.index.find( entry \ "accession" text ).asScala
 
-      // TODO no comments edge in bio4j/bio4j
-      // proteinOpt.foreach { protein =>
-      //   comments.foreach { comment =>
-      //     g.comments.addEdge( protein, comment )
-      //   }
-      // }
+      proteinOpt.foreach { protein =>
+        comments.foreach { comment =>
+          g.comments.addEdge( protein, comment )
+        }
+      }
 
       comments
     }
@@ -134,7 +142,37 @@ case class Comment[V,E](val graph: UniProtGraph[V,E]) {
     _ \ "comment" map { elem => ( stringToCommentTopic( elem \ "@type" text ), elem \ "text" text ) }
 
   val stringToCommentTopic: String => UniProtGraph.CommentTopics =
-    ??? // TODO match big enum
+    {
+      case "allergen"                       =>  UniProtGraph.CommentTopics.allergen
+      case "alternative products"           =>  UniProtGraph.CommentTopics.alternativeProducts
+      case "biotechnology"                  =>  UniProtGraph.CommentTopics.biotechnology
+      case "biophysicochemical properties"  =>  UniProtGraph.CommentTopics.biophysicochemicalProperties
+      case "catalytic activity"             =>  UniProtGraph.CommentTopics.catalyticActivity
+      case "caution"                        =>  UniProtGraph.CommentTopics.caution
+      case "cofactor"                       =>  UniProtGraph.CommentTopics.cofactor
+      case "developmental stage"            =>  UniProtGraph.CommentTopics.developmentalStage
+      case "disease"                        =>  UniProtGraph.CommentTopics.disease
+      case "domain"                         =>  UniProtGraph.CommentTopics.domain
+      case "disruption phenotype"           =>  UniProtGraph.CommentTopics.disruptionPhenotype
+      case "enzyme regulation"              =>  UniProtGraph.CommentTopics.enzymeRegulation
+      case "function"                       =>  UniProtGraph.CommentTopics.function
+      case "induction"                      =>  UniProtGraph.CommentTopics.induction
+      case "miscellaneous"                  =>  UniProtGraph.CommentTopics.miscellaneous
+      case "pathway"                        =>  UniProtGraph.CommentTopics.pathway
+      case "pharmaceutical"                 =>  UniProtGraph.CommentTopics.pharmaceutical
+      case "polymorphism"                   =>  UniProtGraph.CommentTopics.polymorphism
+      case "PTM"                            =>  UniProtGraph.CommentTopics.PTM
+      case "RNA editing"                    =>  UniProtGraph.CommentTopics.RNAEditing
+      case "similarity"                     =>  UniProtGraph.CommentTopics.similarity
+      case "subcellular location"           =>  UniProtGraph.CommentTopics.subcellularLocation
+      case "sequence caution"               =>  UniProtGraph.CommentTopics.sequenceCaution
+      case "subunit"                        =>  UniProtGraph.CommentTopics.subunit
+      case "tissue specificity"             =>  UniProtGraph.CommentTopics.tissueSpecificity
+      case "toxic dose"                     =>  UniProtGraph.CommentTopics.toxicDose
+      case "online information"             =>  UniProtGraph.CommentTopics.onlineInformation
+      case "mass spectrometry"              =>  UniProtGraph.CommentTopics.massSpectrometry
+      case "interaction"                    =>  UniProtGraph.CommentTopics.interaction
+    }
 }
 
 case class Keyword[V,E](val graph: UniProtGraph[V,E]) {
