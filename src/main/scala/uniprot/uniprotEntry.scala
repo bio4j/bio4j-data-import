@@ -62,8 +62,52 @@ case class Entry(val entry: Elem) extends AnyVal {
     entry \ "comment" map {
       elem => ( conversions.stringToCommentTopic( elem \ "@type" text ), elem \ "text" text )
     }
+
+  /*
+    The output here is (type, description, positionInfo).
+  */
+  def features: Seq[(UniProtGraph.FeatureTypes, Option[String], UniProtLocation)] =
+    {
+
+      def parseLocation(location: Node): UniProtLocation =
+        (location \ "position").headOption.fold(
+          UniProtLocation(
+            begin = (location \ "begin" \ "@position" text).toInt,
+            end   = (location \ "end" \ "@position" text).toInt
+          )
+        ){
+          elem => {
+
+            val singlePosition = (elem \ "@position" text).toInt
+
+            UniProtLocation(
+              begin = singlePosition,
+              end   = singlePosition
+            )
+          }
+        }
+
+      entry \ "feature" map {
+        elem => (
+          conversions.stringToFeatureType(elem \ "@type" text),
+          (elem \ "@description").headOption map { _.text },
+          parseLocation(elem)
+        )
+      }
+    }
 }
 
+case class UniProtLocation(val begin: Int, val end: Int)
+case class ZeroHalfOpenLocation(val begin: Int, val end: Int)
+case object ZeroHalfOpenLocation {
+
+  // I *think* UniProt intervals are 1-based and [begin,end]. Thus if we want 0-based [x,y[ then the start is -1 and the end is -1 + 1 = 0
+  def fromUniProtLocation(uniprotLocation: UniProtLocation): ZeroHalfOpenLocation =
+    ZeroHalfOpenLocation(
+      begin = uniprotLocation.begin - 1,
+      end   = uniprotLocation.end
+    )
+}
 case object Entry {
 
   implicit def asXML: Entry => Elem = _.entry

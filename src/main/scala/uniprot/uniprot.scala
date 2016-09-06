@@ -98,14 +98,31 @@ case class Keyword[V,E](val graph: UniProtGraph[V,E]) {
 
 case class Annotation[V,E](val graph: UniProtGraph[V,E]) {
 
-  // val annotationsFromEntry: Entry =>
-
-  case class Location(val begin: Int, val end: Int)
-  case class UniProtLocationData(val begin: Int, val end: Int)
-
-  // I *think* UniProt intervals are 1-based and [begin,end]. Thus if we want 0-based [x,y[ then the start is -1 and the end is -1 + 1 = 0
-  val uniprotLocationToStandardLocation: UniProtLocationData => Location =
-    uniprot => Location(uniprot.begin - 1, uniprot.end)
-
   // the idea is creating a Seq of (locations, featuretypes) and then create vertices and edges from that
+
+  val fromEntry = AddVertex.generically[V,E](
+    graph,
+    graph.annotation,
+    (entry: Entry, g: UniProtGraph[V,E]) => {
+
+      val proteinOpt =
+        graph.protein.accession.index.find( entry.accession ).asScala
+
+      entry.features map {
+        case (featureType, maybeDescription, uniProtLocation) =>
+          val annotation =
+            g.annotation.addVertex
+          // maybeDescription.foreach { annotation.set(g.annotation.description, _) } // TODO add to bio4j/bio4j
+          val location = ZeroHalfOpenLocation.fromUniProtLocation(uniProtLocation)
+
+          // again forced to create this edge along the way
+          proteinOpt.foreach { protein =>
+            g.annotations.addEdge(protein, annotation)
+              .set(g.annotations.begin, location.begin: java.lang.Integer)
+              .set(g.annotations.end, location.end: java.lang.Integer)
+          }
+        annotation
+      }
+    }
+  )
 }
