@@ -95,6 +95,12 @@ case class Entry(val entry: Elem) extends AnyVal {
         )
       }
     }
+
+  // returns (id, name)
+  def isoforms: Seq[(String, String)] =
+    (entry \ "comment" \ "isoform")
+      .filter { elem => (elem \ "sequence" \ "@type" text) != "displayed" } // exclude the one corresponding to the entry
+      .map { elem => (elem \ "id" text, s"${proteinFullName} isoform ${(elem \ "name" text)}") }
 }
 
 case class UniProtLocation(val begin: Int, val end: Int)

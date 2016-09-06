@@ -98,8 +98,6 @@ case class Keyword[V,E](val graph: UniProtGraph[V,E]) {
 
 case class Annotation[V,E](val graph: UniProtGraph[V,E]) {
 
-  // the idea is creating a Seq of (locations, featuretypes) and then create vertices and edges from that
-
   val fromEntry = AddVertex.generically[V,E](
     graph,
     graph.annotation,
@@ -112,7 +110,9 @@ case class Annotation[V,E](val graph: UniProtGraph[V,E]) {
         case (featureType, maybeDescription, uniProtLocation) =>
           val annotation =
             g.annotation.addVertex
-          // maybeDescription.foreach { annotation.set(g.annotation.description, _) } // TODO add to bio4j/bio4j
+
+          maybeDescription.foreach { annotation.set(g.annotation.description, _) }
+
           val location = ZeroHalfOpenLocation.fromUniProtLocation(uniProtLocation)
 
           // again forced to create this edge along the way
@@ -122,6 +122,41 @@ case class Annotation[V,E](val graph: UniProtGraph[V,E]) {
               .set(g.annotations.end, location.end: java.lang.Integer)
           }
         annotation
+      }
+    }
+  )
+}
+
+case class Isoform[V,E](val graph: UniProtGraph[V,E]) {
+
+  val fromEntry = AddVertex.generically[V,E](
+    graph,
+    graph.protein,
+    (entry: Entry, g: UniProtGraph[V,E]) => {
+
+      val maybeEntryProtein = g.protein.accession.index.find(entry.accession).asScala
+
+      entry.isoforms map {
+        case (id, name) => {
+
+          // TODO review this. Shall we use the isoform id instead of accessions everywhere?
+          g.protein.accession.index.find(id).asScala.fold(
+            { // need to add the new isoform
+              val isoform = g.protein.addVertex
+                .set(g.protein.accession, id)
+                .set(g.protein.fullName, name)
+                .set(g.protein.isCanonical, false: java.lang.Boolean) // critical that this goes *after* loading "proteins"
+
+              maybeEntryProtein.foreach { protein => g.isoforms.addEdge(protein, isoform) }
+
+              isoform
+            }
+          ){ // already there; add an edge from the current entry protein
+            isoform =>
+              maybeEntryProtein.foreach { protein => g.isoforms.addEdge(protein, isoform) }
+              isoform
+          }
+        }
       }
     }
   )
