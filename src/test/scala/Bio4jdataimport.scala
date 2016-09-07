@@ -1,10 +1,9 @@
-package bio4j.bio4jdataimport.test
+package com.bio4j.data.test
 
 import org.scalatest.FunSuite
-
-import bio4j.bio4jdataimport._
-import com.bio4j.xsd._
-import scalaxb._, protocol._
+import scala.xml._
+import com.bio4j.data._, uniprot._
+import com.bio4j.model._
 
 class Bio4jdataimportTest extends FunSuite {
 
@@ -102,16 +101,16 @@ class Bio4jdataimportTest extends FunSuite {
       </feature>
       <sequence version="1" modified="2004-07-19" checksum="A747EE6F952CBAD7" mass="53469" length="502">METMSDYSKEVSEALSALRGELSALSAAISNTVRAGSYSAPVAKDCKAGHCDSKAVLKSLSRSARDLDSAVEAVSSNCEWASSGYGKQIARALRDDAVRVKREVESTRDAVDVVTPSCCVQGLAEEAGKLSEMAAVYRCMATVFETADSHGVREMLAKVDGLKQTMSGFKRLLGKTAEIDGLSDSVIRLGRSIGEVLPATEGKAMRDLVKQCERLNGLVVDGSRKVEEQCSKLRDMASQSYVVADLASQYDVLGGKAQEALSASDALEQAAAVALRAKAAADAVAKSLDSLDVKKLDRLLEQASAVSGLLAKKNDLDAVVTSLAGLEALVAKKDELYKICAAVNSVDKSKLELLNVKPDRLKSLTEQTVVVSQMTTALATFNEDKLDSVLGKYMQMHRFLGMATQLKLMSDSLAEFQPAKMAQMAAAASQLKDFLTDQTVSRLEKVSAAVDATDVTKYASAFSDGGMVSDMTKAYETVKAFAAVVNSLDSKKLKLVAECAKK</sequence>
     </entry>
+  }
 
-    val entry = scalaxb.fromXML[Entry](entryXML)
-    val entryXMLAgain = scalaxb.toXML[Entry](entry, entry.toString, defaultScope)
-    val entryAgain = scalaxb.fromXML[Entry](entryXMLAgain)
+  test("entry iterator") {
 
-    println { entry.sequence.value }
+    val xml = XML.loadFile("uniprot_sprot.sample.xml")
 
-    assert(
+    def entries = Entry.fromUniProtLines( io.Source.fromFile("uniprot_sprot.sample.xml").getLines )
 
-      entry === entryAgain
-    )
+    assert { entries.size == 26 }
+
+    entries foreach { entry => println { entry.accession } }
   }
 }
