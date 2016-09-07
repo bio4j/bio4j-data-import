@@ -113,4 +113,50 @@ class Bio4jdataimportTest extends FunSuite {
 
     entries foreach { entry => println { entry.accession } }
   }
+
+  test("parse all SwissProt") {
+
+    import better.files._
+
+    def entries =
+      Entry.fromUniProtLines( File("../uniprot_sprot.xml").lineIterator )
+
+    def ioEntryStrings = Entry.fromUniProtlinesString( io.Source.fromFile("../uniprot_sprot.xml").getLines )
+
+    def ioEntries =
+      Entry.fromUniProtlinesDebug( io.Source.fromFile("../uniprot_sprot.xml").getLines )
+    // val accessions = scala.collection.mutable.HashSet[String]()
+
+    // entries.zipWithIndex foreach {
+    //   case (entry, index) => {
+    //     // accessions += entry.accession
+    //     if((index % 10000) == 0) println { s"traversed ${index} entries" }
+    //   }
+    // }
+
+    def time[T](str: String)(thunk: => T): T = {
+      print(str + "... ")
+      val t1 = System.currentTimeMillis
+      val x = thunk
+      val t2 = System.currentTimeMillis
+      println((t2 - t1) + " msecs")
+      x
+    }
+
+    // time("just traverse the file") {
+    //   io.Source.fromFile("../uniprot_sprot.xml").getLines foreach { _ => () }
+    // }
+
+    time("parse entries") {
+
+      ioEntries.zipWithIndex foreach {
+        case (entry, index) => {
+          // accessions += entry.accession
+          if((index % 10000) == 0) println { s"traversed ${index} entries, current time: ${System.currentTimeMillis}" }
+        }
+      }
+    }
+
+    // println { accessions.size }
+  }
 }

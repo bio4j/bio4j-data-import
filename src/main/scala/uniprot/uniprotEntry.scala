@@ -173,7 +173,163 @@ case object Entry {
       takeEntry_rec(Seq())
   }
 
+  def fromUniProtlinesString(lines: Iterator[String]): Iterator[String] = new Iterator[String] {
 
+    // def time[T](str: String)(thunk: => T): T = {
+    //   println(str + "... ")
+    //   val t1 = System.currentTimeMillis
+    //   val x = thunk
+    //   val t2 = System.currentTimeMillis
+    //   println(s"${str} took ${(t2 - t1)} msecs")
+    //   x
+    // }
+
+    private val rest: BufferedIterator[String] = lines.buffered
+    private val currentEntryStringBuilder = new collection.mutable.StringBuilder
+
+    private var _hasNextCalled: Boolean = false
+    private var _hasNext: Boolean = false
+
+    /*
+      note that internally hasNext drops everything it founds before a line starting with '<entry'.
+    */
+    def hasNext: Boolean = if(_hasNextCalled) _hasNext else {
+
+      _hasNext = advanceUntilNextEntry
+      _hasNextCalled = true
+      _hasNext
+    }
+
+    def next(): String = {
+
+      if(hasNext) {
+        _hasNextCalled = false;
+        takeEntry
+      }
+      else throw new NoSuchElementException
+    }
+
+    private def isEntryStart(line: String): Boolean = line startsWith "<entry"
+    private def isEntryStop(line: String): Boolean  = line startsWith "</entry"
+
+    private def advanceUntilNextEntry: Boolean = {
+
+      if(rest.hasNext) {
+
+        val nextLine = rest.head
+
+        if(isEntryStart(nextLine))
+          true
+        else {
+          rest.next
+          advanceUntilNextEntry
+        }
+      }
+      else
+        false
+    }
+
+    @annotation.tailrec
+    private def takeEntry_rec(acc: collection.mutable.StringBuilder): String =
+      if( !isEntryStop(rest.head) )
+        takeEntry_rec(acc ++= rest.next)
+      else
+        (acc ++= rest.next).toString
+
+    private def takeEntry: String = {
+      currentEntryStringBuilder.setLength(0)
+      takeEntry_rec(currentEntryStringBuilder)
+    }
+  }
+
+  def fromUniProtlinesDebug(lines: Iterator[String]): Iterator[Entry] = new Iterator[Entry] {
+
+    private val rest: BufferedIterator[String] = lines.buffered
+    private val currentEntryStringBuilder = new collection.mutable.StringBuilder
+
+    private var _hasNextCalled: Boolean = false
+    private var _hasNext: Boolean = false
+
+    import com.fasterxml.aalto.sax.SAXParserFactoryImpl
+    private def factory = {
+
+      val f = new SAXParserFactoryImpl()
+      f.setValidating(false)
+      // f.setNamespaceAware(false)
+      f
+    }
+
+    import scala.xml.Elem
+    import scala.xml.factory.XMLLoader
+    import javax.xml.parsers.SAXParser
+    val MyXML = new XMLLoader[Elem] {
+
+      private val f = {
+        val f0 = javax.xml.parsers.SAXParserFactory.newInstance()
+        f0.setNamespaceAware(false)
+        f0.setValidating(false)
+        f0.setXIncludeAware(false)
+        f0
+      }
+
+      lazy val parser0 = f.newSAXParser()
+
+      override def parser: SAXParser = parser0
+    }
+
+    private val XMLParser = XML.withSAXParser( factory.newSAXParser )
+
+    /*
+      note that internally hasNext drops everything it founds before a line starting with '<entry'.
+    */
+    def hasNext: Boolean = if(_hasNextCalled) _hasNext else {
+
+      _hasNext = advanceUntilNextEntry
+      _hasNextCalled = true
+      _hasNext
+    }
+
+    def next(): Entry = {
+
+      if(hasNext) {
+        _hasNextCalled = false;
+        takeEntry
+      }
+      else throw new NoSuchElementException
+    }
+
+    private def isEntryStart(line: String): Boolean = line startsWith "<entry"
+    private def isEntryStop(line: String): Boolean  = line startsWith "</entry"
+
+    private def advanceUntilNextEntry: Boolean = {
+
+      if(rest.hasNext) {
+
+        val nextLine = rest.head
+
+        if(isEntryStart(nextLine))
+          true
+        else {
+          rest.next
+          advanceUntilNextEntry
+        }
+      }
+      else
+        false
+    }
+
+    @annotation.tailrec
+    private def takeEntry_rec(acc: collection.mutable.StringBuilder): Entry =
+      if( !isEntryStop(rest.head) )
+        takeEntry_rec(acc ++= rest.next)
+      else
+        Entry( MyXML.loadString( (acc ++= rest.next).toString ) )
+
+    private def takeEntry: Entry = {
+      currentEntryStringBuilder.setLength(0)
+      takeEntry_rec(currentEntryStringBuilder)
+    }
+  }
 }
 
 // TODO: move it to db.rnacentral
