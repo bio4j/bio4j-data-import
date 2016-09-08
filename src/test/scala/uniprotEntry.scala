@@ -117,9 +117,8 @@ class Bio4jdataimportTest extends FunSuite {
     import better.files._
 
     def entries =
-      Entry.fromUniProtLines( File("../uniprot_sprot.xml").lineIterator )
-
-    // def ioEntryStrings = Entry.fromUniProtlinesString( io.Source.fromFile("../uniprot_sprot.xml").getLines )
+      // Entry.fromUniProtLines( File("../uniprot_sprot.xml").lineIterator )
+      Entry.fromUniProtLines( io.Source.fromFile("../uniprot_sprot.xml").getLines )
 
     def time[T](str: String)(thunk: => T): T = {
       print(str + "... ")
@@ -130,17 +129,19 @@ class Bio4jdataimportTest extends FunSuite {
       x
     }
 
-    // time("just traverse the file") {
-    //   io.Source.fromFile("../uniprot_sprot.xml").getLines foreach { _ => () }
-    // }
+    val accessions = new collection.mutable.HashSet[String]()
 
     time("parse entries") {
 
       entries.zipWithIndex foreach {
         case (entry, index) => {
+
+          val _zz = accessions += entry.accession
           if((index % 10000) == 0) println { s"traversed ${index} entries, current time: ${System.currentTimeMillis}" }
         }
       }
     }
+
+    assert { accessions.size == 551705 }
   }
 }
