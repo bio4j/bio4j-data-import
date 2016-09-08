@@ -107,7 +107,7 @@ case class ImportKeywordTypes[V,E](val graph: UniProtGraph[V,E]) {
     (row: KeywordRow, g: UniProtGraph[V,E]) =>
       Seq(
         g.keyword.addVertex
-          .set(g.keyword.name, row.id)
+          .set(g.keyword.id, row.id)
           .set(g.keyword.definition, row.description)
           .set(g.keyword.category, conversions.stringToKeywordCategory(row.category))
       )
@@ -121,7 +121,7 @@ case class ImportKeywords[V,E](val graph: UniProtGraph[V,E]) {
     graph.keyword,
     (entry: Entry, g: UniProtGraph[V,E]) => {
 
-      val keywords: Seq[UniProtGraph[V,E]#Keyword] = ??? // entry.keywordIDs.map(g.keyword.name.index.find(_)).flatten
+      val keywords = entry.keywordIDs.map(g.keyword.id.index.find(_).asScala).flatten
 
       g.protein.accession.index.find(entry.accession).asScala foreach {
         protein => keywords foreach {
