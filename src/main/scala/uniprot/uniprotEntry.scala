@@ -124,147 +124,14 @@ case object Entry {
   def fromUniProtLines(lines: Iterator[String]): Iterator[Entry] = new Iterator[Entry] {
 
     private val rest: BufferedIterator[String] = lines.buffered
-
-    private var _hasNextCalled: Boolean = false
-    private var _hasNext: Boolean = false
-
-    /*
-      note that internally hasNext drops everything it founds before a line starting with '<entry'.
-    */
-    def hasNext: Boolean = if(_hasNextCalled) _hasNext else {
-
-      _hasNext = advanceUntilNextEntry
-      _hasNextCalled = true
-      _hasNext
-    }
-
-    def next(): Entry = {
-
-      if(hasNext) { _hasNextCalled = false; takeEntry } else throw new NoSuchElementException
-    }
-
-    private def isEntryStart(line: String): Boolean = line startsWith "<entry"
-    private def isEntryStop(line: String): Boolean  = line startsWith "</entry"
-
-    private def advanceUntilNextEntry: Boolean = {
-
-      if(rest.hasNext) {
-
-        val nextLine = rest.head
-
-        if(isEntryStart(nextLine))
-          true
-        else {
-          rest.next
-          advanceUntilNextEntry
-        }
-      }
-      else
-        false
-    }
-
-    private def takeEntry_rec(acc: Seq[String]): Entry =
-      if( !isEntryStop(rest.head) )
-        takeEntry_rec(acc :+ rest.next)
-      else
-        Entry( XML.loadString( (acc :+ rest.next).mkString("\n") ) )
-
-    private def takeEntry: Entry =
-      takeEntry_rec(Seq())
-  }
-
-  def fromUniProtlinesString(lines: Iterator[String]): Iterator[String] = new Iterator[String] {
-
-    // def time[T](str: String)(thunk: => T): T = {
-    //   println(str + "... ")
-    //   val t1 = System.currentTimeMillis
-    //   val x = thunk
-    //   val t2 = System.currentTimeMillis
-    //   println(s"${str} took ${(t2 - t1)} msecs")
-    //   x
-    // }
-
-    private val rest: BufferedIterator[String] = lines.buffered
     private val currentEntryStringBuilder = new collection.mutable.StringBuilder
 
     private var _hasNextCalled: Boolean = false
-    private var _hasNext: Boolean = false
+    private var _hasNext      : Boolean = false
 
-    /*
-      note that internally hasNext drops everything it founds before a line starting with '<entry'.
-    */
-    def hasNext: Boolean = if(_hasNextCalled) _hasNext else {
+    private lazy val MyXML = new factory.XMLLoader[Elem] {
 
-      _hasNext = advanceUntilNextEntry
-      _hasNextCalled = true
-      _hasNext
-    }
-
-    def next(): String = {
-
-      if(hasNext) {
-        _hasNextCalled = false;
-        takeEntry
-      }
-      else throw new NoSuchElementException
-    }
-
-    private def isEntryStart(line: String): Boolean = line startsWith "<entry"
-    private def isEntryStop(line: String): Boolean  = line startsWith "</entry"
-
-    private def advanceUntilNextEntry: Boolean = {
-
-      if(rest.hasNext) {
-
-        val nextLine = rest.head
-
-        if(isEntryStart(nextLine))
-          true
-        else {
-          rest.next
-          advanceUntilNextEntry
-        }
-      }
-      else
-        false
-    }
-
-    @annotation.tailrec
-    private def takeEntry_rec(acc: collection.mutable.StringBuilder): String =
-      if( !isEntryStop(rest.head) )
-        takeEntry_rec(acc ++= rest.next)
-      else
-        (acc ++= rest.next).toString
-
-    private def takeEntry: String = {
-      currentEntryStringBuilder.setLength(0)
-      takeEntry_rec(currentEntryStringBuilder)
-    }
-  }
-
-  def fromUniProtlinesDebug(lines: Iterator[String]): Iterator[Entry] = new Iterator[Entry] {
-
-    private val rest: BufferedIterator[String] = lines.buffered
-    private val currentEntryStringBuilder = new collection.mutable.StringBuilder
-
-    private var _hasNextCalled: Boolean = false
-    private var _hasNext: Boolean = false
-
-    import com.fasterxml.aalto.sax.SAXParserFactoryImpl
-    private def factory = {
-
-      val f = new SAXParserFactoryImpl()
-      f.setValidating(false)
-      // f.setNamespaceAware(false)
-      f
-    }
-
-    import scala.xml.Elem
-    import scala.xml.factory.XMLLoader
-    import javax.xml.parsers.SAXParser
-    val MyXML = new XMLLoader[Elem] {
-
-      private val f = {
+      private lazy val parserFactory = {
         val f0 = javax.xml.parsers.SAXParserFactory.newInstance()
         f0.setNamespaceAware(false)
         f0.setValidating(false)
@@ -272,12 +139,10 @@ case object Entry {
         f0
       }
 
-      lazy val parser0 = f.newSAXParser()
+      private lazy val parser0 = parserFactory.newSAXParser()
 
       override def parser: SAXParser = parser0
     }
-
-    private val XMLParser = XML.withSAXParser( factory.newSAXParser )
 
     /*
       note that internally hasNext drops everything it founds before a line starting with '<entry'.
@@ -326,39 +191,8 @@ case object Entry {
         Entry( MyXML.loadString( (acc ++= rest.next).toString ) )
 
     private def takeEntry: Entry = {
-      currentEntryStringBuilder.setLength(0)
+      currentEntryStringBuilder.setLength(0) // clear the string builder
       takeEntry_rec(currentEntryStringBuilder)
     }
   }
 }
-
-// TODO: move it to db.rnacentral
-  // implicit class IteratorOps[V](val iterator: Iterator[V]) extends AnyVal {
-  //
-  //   /* Similar to the Stream's .groupBy, but assuming that groups are contiguous. Another difference is that it returns the key corresponding to each group. */
-  //   // NOTE: The original iterator should be discarded after calling this method
-  //   def groupBy[K](getKey: V => K): Iterator[(K, Seq[V])] = new Iterator[(K, Seq[V])] {
-  //     /* The definition is very straightforward: we keep the `rest` of values and on each `.next()` call bite off the longest prefix with the same key */
-  //
-  //     /* Buffered iterator allows to look ahead without removing the next element */
-  //     private val rest: BufferedIterator[V] = iterator.buffered
-  //
-  //     // NOTE: this is so simple, because of the contiguous grouping assumpltion
-  //     def hasNext: Boolean = rest.hasNext
-  //
-  //     def next(): (K, Seq[V]) = {
-  //       val key = getKey(rest.head)
-  //
-  //       key -> groupOf(key)
-  //     }
-  //
-  //     @annotation.tailrec
-  //     private def groupOf_rec(key: K, acc: Seq[V]): Seq[V] = {
-  //       if ( rest.hasNext && getKey(rest.head) == key )
-  //         groupOf_rec(key, rest.next() +: acc)
-  //       else acc
-  //     }
-  //
-  //     private def groupOf(key: K): Seq[V] = groupOf_rec(key, Seq())
-  //   }
-  // }

@@ -105,8 +105,6 @@ class Bio4jdataimportTest extends FunSuite {
 
   test("entry iterator") {
 
-    val xml = XML.loadFile("uniprot_sprot.sample.xml")
-
     def entries = Entry.fromUniProtLines( io.Source.fromFile("uniprot_sprot.sample.xml").getLines )
 
     assert { entries.size == 26 }
@@ -121,18 +119,7 @@ class Bio4jdataimportTest extends FunSuite {
     def entries =
       Entry.fromUniProtLines( File("../uniprot_sprot.xml").lineIterator )
 
-    def ioEntryStrings = Entry.fromUniProtlinesString( io.Source.fromFile("../uniprot_sprot.xml").getLines )
-
-    def ioEntries =
-      Entry.fromUniProtlinesDebug( io.Source.fromFile("../uniprot_sprot.xml").getLines )
-    // val accessions = scala.collection.mutable.HashSet[String]()
-
-    // entries.zipWithIndex foreach {
-    //   case (entry, index) => {
-    //     // accessions += entry.accession
-    //     if((index % 10000) == 0) println { s"traversed ${index} entries" }
-    //   }
-    // }
+    // def ioEntryStrings = Entry.fromUniProtlinesString( io.Source.fromFile("../uniprot_sprot.xml").getLines )
 
     def time[T](str: String)(thunk: => T): T = {
       print(str + "... ")
@@ -149,14 +136,11 @@ class Bio4jdataimportTest extends FunSuite {
 
     time("parse entries") {
 
-      ioEntries.zipWithIndex foreach {
+      entries.zipWithIndex foreach {
         case (entry, index) => {
-          // accessions += entry.accession
           if((index % 10000) == 0) println { s"traversed ${index} entries, current time: ${System.currentTimeMillis}" }
         }
       }
     }
-
-    // println { accessions.size }
   }
 }
