@@ -9,7 +9,7 @@ import scala.compat.java8.OptionConverters._
 // from keywords-all.tsv
 case class KeywordRow(val id: String, val description: String, val category: String)
 
-case class CanonicalProtein[V,E](val graph: UniProtGraph[V,E]) {
+case class ImportEntryProteins[V,E](val graph: UniProtGraph[V,E]) {
 
   type G = UniProtGraph[V,E]
 
@@ -19,39 +19,56 @@ case class CanonicalProtein[V,E](val graph: UniProtGraph[V,E]) {
     (entry: Entry, g: UniProtGraph[V,E]) =>
       Seq (
         g.protein.addVertex
-        .set( g.protein.isCanonical,  true: java.lang.Boolean   )
-        .set( g.protein.accession,    entry.accession           )
-        .set( g.protein.fullName,     entry.proteinFullName     )
-        .set( g.protein.existence,    entry.existence           )
-        .set( g.protein.dataset,      entry.dataset             )
-        .set( g.protein.sequence,     entry.sequence            )
+        .set( g.protein.id,           entry.canonicalID     )
+        .set( g.protein.accession,    entry.accession       )
+        .set( g.protein.fullName,     entry.proteinFullName )
+        .set( g.protein.existence,    entry.existence       )
+        .set( g.protein.dataset,      entry.dataset         )
+        .set( g.protein.sequence,     entry.sequence        )
       )
     )
 }
 
-case class GeneName[V,E](val graph: UniProtGraph[V,E]) {
+/*
+  Import gene names vertices, and the geneProducts edge from gene names to entry proteins. Proteins should be already imported.
+*/
+case class ImportEntryGeneNames[V,E](val graph: UniProtGraph[V,E]) {
 
   val fromEntry = AddVertex.generically[V,E](
     graph,
     graph.geneName,
-    (entry: Entry, g: UniProtGraph[V,E]) =>
-      entry.geneName
-        .fold( Seq[UniProtGraph[V,E]#GeneName]() ) {
-          name =>
+    (entry: Entry, g: UniProtGraph[V,E]) => {
+
+      // if there's no gene name, empty, otherwise try to find if it's already imported, if not add it
+      val geneNames =
+        entry.geneName
+          .fold( Seq[UniProtGraph[V,E]#GeneName]() ) {
+            name =>
             g.geneName.name.index.find(name).asScala
-              .fold(
-                Seq(
-                  g.geneName.addVertex
-                    .set(g.geneName.name, name)
-                )
-              ){
-                Seq(_)
-              }
+            .fold(
+              Seq(
+                g.geneName.addVertex
+                .set(g.geneName.name, name)
+              )
+            ){ Seq(_) }
+          }
+
+      /* Add geneProducts edges to the entry protein. Proteins should be imported before. */
+      g.protein.accession.index.find( entry.accession ).asScala.foreach {
+        protein => geneNames foreach {
+          geneName => g.geneProducts.addEdge(geneName, protein)
         }
+      }
+
+      geneNames
+    }
   )
 }
 
-case class Comment[V,E](val graph: UniProtGraph[V,E]) {
+/*
+  Import entry-level comment annotations, and the comments edges from entry proteins to comments. Entry proteins should be already imported.
+*/
+case class ImportComments[V,E](val graph: UniProtGraph[V,E]) {
 
   val fromEntry = AddVertex.generically[V,E](
     graph,
@@ -68,20 +85,21 @@ case class Comment[V,E](val graph: UniProtGraph[V,E]) {
 
       // add edges from proteins to these comments; I'm forced to do this here.
       val proteinOpt =
-        graph.protein.accession.index.find( entry.accession ).asScala
-
-      proteinOpt.foreach { protein =>
-        comments.foreach { comment =>
-          g.comments.addEdge( protein, comment )
+        graph.protein.accession.index.find( entry.accession ).asScala.foreach {
+          protein => comments.foreach {
+            comment => g.comments.addEdge( protein, comment )
+          }
         }
-      }
 
       comments
     }
   )
 }
 
-case class Keyword[V,E](val graph: UniProtGraph[V,E]) {
+/*
+  Import all the keyword types. This does not need anything beforehand.
+*/
+case class ImportKeywords[V,E](val graph: UniProtGraph[V,E]) {
 
   val fromRow = AddVertex.generically[V,E](
     graph,
@@ -96,7 +114,10 @@ case class Keyword[V,E](val graph: UniProtGraph[V,E]) {
   )
 }
 
-case class Annotation[V,E](val graph: UniProtGraph[V,E]) {
+/*
+  Import sequence annotations (features), including the annotations edge from entry proteins to their annotations. This needs the entry proteins.
+*/
+case class ImportAnnotations[V,E](val graph: UniProtGraph[V,E]) {
 
   val fromEntry = AddVertex.generically[V,E](
     graph,
@@ -108,6 +129,7 @@ case class Annotation[V,E](val graph: UniProtGraph[V,E]) {
 
       entry.features map {
         case (featureType, maybeDescription, uniProtLocation) =>
+
           val annotation =
             g.annotation.addVertex
 
@@ -121,13 +143,17 @@ case class Annotation[V,E](val graph: UniProtGraph[V,E]) {
               .set(g.annotations.begin, location.begin: java.lang.Integer)
               .set(g.annotations.end, location.end: java.lang.Integer)
           }
-        annotation
+
+          annotation
       }
     }
   )
 }
 
-case class Isoform[V,E](val graph: UniProtGraph[V,E]) {
+/*
+  Import the isoforms, and add isoforms edges from the entry protein to the isoforms described there. Needs the entry proteins imported before.
+*/
+case class ImportIsoforms[V,E](val graph: UniProtGraph[V,E]) {
 
   val fromEntry = AddVertex.generically[V,E](
     graph,
@@ -139,13 +165,11 @@ case class Isoform[V,E](val graph: UniProtGraph[V,E]) {
       entry.isoforms map {
         case (id, name) => {
 
-          // TODO review this. Shall we use the isoform id instead of accessions everywhere?
-          g.protein.accession.index.find(id).asScala.fold(
+          g.protein.id.index.find(id).asScala.fold(
             { // need to add the new isoform
               val isoform = g.protein.addVertex
-                .set(g.protein.accession, id)
+                .set(g.protein.id, id)
                 .set(g.protein.fullName, name)
-                .set(g.protein.isCanonical, false: java.lang.Boolean) // critical that this goes *after* loading "proteins"
 
               maybeEntryProtein.foreach { protein => g.isoforms.addEdge(protein, isoform) }
 
