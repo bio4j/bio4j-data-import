@@ -99,7 +99,7 @@ case class ImportComments[V,E](val graph: UniProtGraph[V,E]) {
 /*
   Import all the keyword types. This does not need anything beforehand.
 */
-case class ImportKeywords[V,E](val graph: UniProtGraph[V,E]) {
+case class ImportKeywordTypes[V,E](val graph: UniProtGraph[V,E]) {
 
   val fromRow = AddVertex.generically[V,E](
     graph,
@@ -111,6 +111,26 @@ case class ImportKeywords[V,E](val graph: UniProtGraph[V,E]) {
           .set(g.keyword.definition, row.description)
           .set(g.keyword.category, conversions.stringToKeywordCategory(row.category))
       )
+  )
+}
+
+case class ImportKeywords[V,E](val graph: UniProtGraph[V,E]) {
+
+  val fromEntry = AddVertex.generically[V,E](
+    graph,
+    graph.keyword,
+    (entry: Entry, g: UniProtGraph[V,E]) => {
+
+      val keywords: Seq[UniProtGraph[V,E]#Keyword] = ??? // entry.keywordIDs.map(g.keyword.name.index.find(_)).flatten
+
+      g.protein.accession.index.find(entry.accession).asScala foreach {
+        protein => keywords foreach {
+          keyword => g.keywords.addEdge(protein, keyword)
+        }
+      }
+
+      keywords
+    }
   )
 }
 

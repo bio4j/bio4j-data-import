@@ -63,6 +63,9 @@ case class Entry(val entry: Elem) extends AnyVal {
       elem => ( conversions.stringToCommentTopic( elem \ "@type" text ), elem \ "text" text )
     }
 
+  def keywordIDs: Seq[String] =
+    entry \ "keyword" map { _ \ "@id" text }
+
   /*
     The output here is (type, description, positionInfo).
   */
@@ -102,7 +105,7 @@ case class Entry(val entry: Elem) extends AnyVal {
       .filter { elem => (elem \ "sequence" \ "@type" text) != "displayed" } // exclude the one corresponding to the entry
       .map { elem => (elem \ "id" text, s"${proteinFullName} isoform ${(elem \ "name" text)}") }
 
-  def canonicalID: String = 
+  def canonicalID: String =
     (entry \ "comment" \ "isoform")
       .filter { elem => (elem \ "sequence" \ "@type" text) == "displayed" }
       .map { _ \ "id" text }
