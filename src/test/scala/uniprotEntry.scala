@@ -1,10 +1,9 @@
-package bio4j.bio4jdataimport.test
+package com.bio4j.data.test
 
 import org.scalatest.FunSuite
-
-import bio4j.bio4jdataimport._
-import com.bio4j.xsd._
-import scalaxb._, protocol._
+import scala.xml._
+import com.bio4j.data._, uniprot._
+import com.bio4j.model._
 
 class Bio4jdataimportTest extends FunSuite {
 
@@ -102,16 +101,47 @@ class Bio4jdataimportTest extends FunSuite {
       </feature>
       <sequence version="1" modified="2004-07-19" checksum="A747EE6F952CBAD7" mass="53469" length="502">METMSDYSKEVSEALSALRGELSALSAAISNTVRAGSYSAPVAKDCKAGHCDSKAVLKSLSRSARDLDSAVEAVSSNCEWASSGYGKQIARALRDDAVRVKREVESTRDAVDVVTPSCCVQGLAEEAGKLSEMAAVYRCMATVFETADSHGVREMLAKVDGLKQTMSGFKRLLGKTAEIDGLSDSVIRLGRSIGEVLPATEGKAMRDLVKQCERLNGLVVDGSRKVEEQCSKLRDMASQSYVVADLASQYDVLGGKAQEALSASDALEQAAAVALRAKAAADAVAKSLDSLDVKKLDRLLEQASAVSGLLAKKNDLDAVVTSLAGLEALVAKKDELYKICAAVNSVDKSKLELLNVKPDRLKSLTEQTVVVSQMTTALATFNEDKLDSVLGKYMQMHRFLGMATQLKLMSDSLAEFQPAKMAQMAAAASQLKDFLTDQTVSRLEKVSAAVDATDVTKYASAFSDGGMVSDMTKAYETVKAFAAVVNSLDSKKLKLVAECAKK</sequence>
     </entry>
+  }
 
-    val entry = scalaxb.fromXML[Entry](entryXML)
-    val entryXMLAgain = scalaxb.toXML[Entry](entry, entry.toString, defaultScope)
-    val entryAgain = scalaxb.fromXML[Entry](entryXMLAgain)
+  test("entry iterator") {
 
-    println { entry.sequence.value }
+    def entries = Entry.fromUniProtLines( io.Source.fromFile("uniprot_sprot.sample.xml").getLines )
 
-    assert(
+    assert { entries.size == 26 }
 
-      entry === entryAgain
-    )
+    entries foreach { entry => println { entry.accession } }
+  }
+
+  test("parse all SwissProt") {
+
+    import better.files._
+
+    def entries =
+      // Entry.fromUniProtLines( File("../uniprot_sprot.xml").lineIterator )
+      Entry.fromUniProtLines( io.Source.fromFile("../uniprot_sprot.xml").getLines )
+
+    def time[T](str: String)(thunk: => T): T = {
+      print(str + "... ")
+      val t1 = System.currentTimeMillis
+      val x = thunk
+      val t2 = System.currentTimeMillis
+      println((t2 - t1) + " msecs")
+      x
+    }
+
+    val accessions = new collection.mutable.HashSet[String]()
+
+    time("parse entries") {
+
+      entries.zipWithIndex foreach {
+        case (entry, index) => {
+
+          val _zz = accessions += entry.accession
+          if((index % 10000) == 0) println { s"traversed ${index} entries, current time: ${System.currentTimeMillis}" }
+        }
+      }
+    }
+
+    assert { accessions.size == 551705 }
   }
 }
