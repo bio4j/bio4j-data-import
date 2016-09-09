@@ -90,12 +90,14 @@ case class Entry(val entry: Elem) extends AnyVal {
           }
         }
 
-      entry \ "feature" map {
-        elem => (
-          conversions.stringToFeatureType(elem \ "@type" text),
-          (elem \ "@description").headOption map { _.text },
-          parseLocation(elem)
-        )
+      (entry \ "feature").map {
+        elem: Node => {
+          (
+            conversions.stringToFeatureType(elem \ "@type" text),
+            (elem \ "@description").headOption map { _.text },
+            parseLocation(elem \ "location" head)
+          )
+        }
       }
     }
 

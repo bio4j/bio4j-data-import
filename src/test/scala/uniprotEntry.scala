@@ -101,9 +101,13 @@ class Bio4jdataimportTest extends FunSuite {
       </feature>
       <sequence version="1" modified="2004-07-19" checksum="A747EE6F952CBAD7" mass="53469" length="502">METMSDYSKEVSEALSALRGELSALSAAISNTVRAGSYSAPVAKDCKAGHCDSKAVLKSLSRSARDLDSAVEAVSSNCEWASSGYGKQIARALRDDAVRVKREVESTRDAVDVVTPSCCVQGLAEEAGKLSEMAAVYRCMATVFETADSHGVREMLAKVDGLKQTMSGFKRLLGKTAEIDGLSDSVIRLGRSIGEVLPATEGKAMRDLVKQCERLNGLVVDGSRKVEEQCSKLRDMASQSYVVADLASQYDVLGGKAQEALSASDALEQAAAVALRAKAAADAVAKSLDSLDVKKLDRLLEQASAVSGLLAKKNDLDAVVTSLAGLEALVAKKDELYKICAAVNSVDKSKLELLNVKPDRLKSLTEQTVVVSQMTTALATFNEDKLDSVLGKYMQMHRFLGMATQLKLMSDSLAEFQPAKMAQMAAAASQLKDFLTDQTVSRLEKVSAAVDATDVTKYASAFSDGGMVSDMTKAYETVKAFAAVVNSLDSKKLKLVAECAKK</sequence>
     </entry>
+
+    val entry = Entry(entryXML)
+
+    println { entry.features }
   }
 
-  test("entry iterator") {
+  ignore("entry iterator") {
 
     def entries = Entry.fromUniProtLines( io.Source.fromFile("uniprot_sprot.sample.xml").getLines )
 
@@ -112,7 +116,7 @@ class Bio4jdataimportTest extends FunSuite {
     entries foreach { entry => println { entry.accession } }
   }
 
-  test("parse all SwissProt") {
+  ignore("parse all SwissProt") {
 
     import better.files._
 
