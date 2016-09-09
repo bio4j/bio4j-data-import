@@ -105,11 +105,18 @@ case class Entry(val entry: Elem) extends AnyVal {
       .filter { elem => (elem \ "sequence" \ "@type" text) != "displayed" } // exclude the one corresponding to the entry
       .map { elem => (elem \ "id" text, s"${proteinFullName} isoform ${(elem \ "name" text)}") }
 
-  def canonicalID: String =
-    (entry \ "comment" \ "isoform")
-      .filter { elem => (elem \ "sequence" \ "@type" text) == "displayed" }
-      .map { _ \ "id" text }
-      .head
+  def canonicalID: String = {
+
+    val isoforms = (entry \ "comment" \ "isoform")
+
+    if (isoforms.isEmpty)
+      accession
+    else
+      isoforms
+        .filter { elem => (elem \ "sequence" \ "@type" text) == "displayed" }
+        .map { _ \ "id" text }
+        .head
+  }
 }
 
 case class UniProtLocation(val begin: Int, val end: Int)
