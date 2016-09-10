@@ -74,10 +74,23 @@ case class Entry(val entry: Elem) extends AnyVal {
 
       def parseLocation(location: Node): UniProtLocation =
         (location \ "position").headOption.fold(
-          UniProtLocation(
-            begin = (location \ "begin" \ "@position" text).toInt,
-            end   = (location \ "end" \ "@position" text).toInt
-          )
+          {
+            // both positions can be empty!
+            val _begin = (location \ "begin" \ "@position" text) match {
+              case ""   => 0
+              case pos  => pos.toInt
+            }
+
+            val _end = (location \ "end" \ "@position" text) match {
+              case ""   => 0
+              case pos  => length
+            }
+
+            UniProtLocation(
+              begin = _begin,
+              end   = _end
+            )
+          }
         ){
           elem => {
 

@@ -116,7 +116,7 @@ class Bio4jdataimportTest extends FunSuite {
     entries foreach { entry => println { entry.accession } }
   }
 
-  ignore("parse all SwissProt") {
+  test("parse all SwissProt") {
 
     import better.files._
 
@@ -133,19 +133,20 @@ class Bio4jdataimportTest extends FunSuite {
       x
     }
 
-    val accessions = new collection.mutable.HashSet[String]()
+    // val accessions = new collection.mutable.HashSet[String]()
 
     time("parse entries") {
 
       entries.zipWithIndex foreach {
         case (entry, index) => {
 
-          val _zz = accessions += entry.accession
+          entry.features.foreach { s => println { s"${entry.accession} ${s._3}" } }
+          // val _zz = accessions += entry.accession
           if((index % 10000) == 0) println { s"traversed ${index} entries, current time: ${System.currentTimeMillis}" }
         }
       }
     }
 
-    assert { accessions.size == 551705 }
+    // assert { accessions.size == 551705 }
   }
 }
