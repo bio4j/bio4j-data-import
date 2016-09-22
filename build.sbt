@@ -9,8 +9,7 @@ scalaVersion := "2.11.8"
 libraryDependencies ++= Seq (
   "bio4j"                   % "bio4j"               % "0.12.0-166-g4a5f999",
   "org.scala-lang.modules" %% "scala-xml"           % "1.0.5",
-  "org.scala-lang.modules" %% "scala-java8-compat"  % "0.8.0-RC3",
-  "com.fasterxml"           % "aalto-xml"           % "1.0.0"
+  "org.scala-lang.modules" %% "scala-java8-compat"  % "0.8.0-RC3"
 ) ++ testDependencies
 
 lazy val testDependencies = Seq (
