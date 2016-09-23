@@ -213,7 +213,7 @@ case class Process[V,E](val graph: UniProtGraph[V,E]) {
 
           isoform
           .set(g.protein.sequence, seq)
-          // .set(g.protein.length, seq.length) after bio4j/bio4j#144
+          .set(g.protein.sequenceLength, seq.length: java.lang.Integer)
         }
 
         (graph, isoformOpt)
