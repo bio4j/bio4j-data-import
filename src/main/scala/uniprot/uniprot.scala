@@ -199,4 +199,24 @@ case class Process[V,E](val graph: UniProtGraph[V,E]) {
         (graph, importedIsoforms)
       }
     )
+
+  val isoformSequences =
+    GraphProcess.generically[V,E](
+      graph,
+      (fasta: IsoformFasta, g: G) => {
+
+        val isoformOpt = g.protein.id.index.find(fasta.proteinID).asScala
+
+        isoformOpt.foreach {
+          isoform =>
+          val seq = fasta.sequence
+
+          isoform
+          .set(g.protein.sequence, seq)
+          .set(g.protein.sequenceLength, seq.length: java.lang.Integer)
+        }
+
+        (graph, isoformOpt)
+      }
+    )
 }

@@ -7,14 +7,14 @@ bucketSuffix  := "era7.com"
 scalaVersion := "2.11.8"
 
 libraryDependencies ++= Seq (
-  "bio4j"                   % "bio4j"               % "0.12.0-169-g5b2be3b",
+  "bio4j"                   % "bio4j"               % "0.12.0-170-g5f8af9d",
   "org.scala-lang.modules" %% "scala-xml"           % "1.0.5",
-  "org.scala-lang.modules" %% "scala-java8-compat"  % "0.8.0-RC3"
+  "org.scala-lang.modules" %% "scala-java8-compat"  % "0.8.0-RC3",
+  "ohnosequences"          %% "fastarious"          % "0.6.0"
 ) ++ testDependencies
 
 lazy val testDependencies = Seq (
-  "org.scalatest"         %% "scalatest"    % "2.2.6"   % Test,
-  "com.github.pathikrit"  %% "better-files" % "2.16.0"  % Test
+  "org.scalatest"         %% "scalatest"    % "2.2.6"   % Test
 )
 
 dependencyOverrides := Set (
