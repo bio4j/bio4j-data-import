@@ -7,6 +7,21 @@ import scala.compat.java8.OptionConverters._
 
 case object conversions {
 
+  val stringToGeneLocation: String => UniProtGraph.GeneLocations =
+    {
+      case "apicoplast"                   => UniProtGraph.GeneLocations.apicoplast
+      case "chloroplast"                  => UniProtGraph.GeneLocations.chloroplast
+      case "organellar chromatophore"     => UniProtGraph.GeneLocations.organellar_chromatophore
+      case "cyanelle"                     => UniProtGraph.GeneLocations.cyanelle
+      case "hydrogenosome"                => UniProtGraph.GeneLocations.hydrogenosome
+      case "mitochondrion"                => UniProtGraph.GeneLocations.mitochondrion
+      case "non-photosynthetic plastid"   => UniProtGraph.GeneLocations.non_photosynthetic_plastid
+      case "nucleomorph"                  => UniProtGraph.GeneLocations.nucleomorph
+      case "plasmid"                      => UniProtGraph.GeneLocations.plasmid
+      case "plastid"                      => UniProtGraph.GeneLocations.plastid
+      case _                              => UniProtGraph.GeneLocations.chromosome
+    }
+
   val stringToCommentTopic: String => UniProtGraph.CommentTopics =
     {
       case "allergen"                       =>  UniProtGraph.CommentTopics.allergen

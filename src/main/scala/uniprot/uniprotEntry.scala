@@ -58,6 +58,11 @@ case class Entry(val entry: Elem) extends AnyVal {
     primaryNames.headOption.fold(orfNames.headOption){ Some(_) }
   }
 
+  def geneLocation: UniProtGraph.GeneLocations =
+    ( entry \ "geneLocation" \ "@type" ).headOption.fold(UniProtGraph.GeneLocations.chromosome) {
+      elem => conversions.stringToGeneLocation(elem.text)
+    }
+
   def comments: Seq[(UniProtGraph.CommentTopics, String)] =
     entry \ "comment" map {
       elem => ( conversions.stringToCommentTopic( elem \ "@type" text ), elem \ "text" text )
