@@ -56,7 +56,9 @@ case class Process[V,E](val graph: UniProtGraph[V,E]) {
         /* Add geneProducts edges to the entry protein. Proteins should be imported before. */
         g.protein.accession.index.find( entry.accession ).asScala.foreach {
           protein => geneNames foreach {
-            geneName => g.geneProducts.addEdge(geneName, protein)
+            geneName =>
+              g.geneProducts.addEdge(geneName, protein)
+                .set(g.geneProducts.location, entry.geneLocation)
           }
         }
 
