@@ -20,22 +20,6 @@ case class Entry(val xml: Elem) extends AnyVal {
       .map( _ \ "@value" text )
       .head
 
-  private def isUniProtDBReference(dbRef: Node): Boolean =
-    (dbRef \ "@type" text) == "UniProtKB ID"
-
-  private def isUniProtAccessionProperty(property: Node): Boolean =
-    (property \ "@type" text) == "UniProtKB accession"
-
-  private def isSeed(property: Node): Boolean =
-    (property \ "@type" text) == "isSeed"
-
-  private def nonRepresentativeMembers =
-    (xml \ "member" \ "dbReference") filter isUniProtDBReference
-
-  private def accession(dbRef: Node): String =
-    (dbRef \ "property").filter(isUniProtAccessionProperty).head text
-
-
   def nonRepresentativeMemberIDs: Seq[String] =
     nonRepresentativeMembers
       .flatMap( dbRef =>
@@ -52,5 +36,20 @@ case class Entry(val xml: Elem) extends AnyVal {
           .filter( member => (member \ "property") exists isSeed )
           .head
       )
+
+  private def isUniProtDBReference(dbRef: Node): Boolean =
+    (dbRef \ "@type" text) == "UniProtKB ID"
+
+  private def isUniProtAccessionProperty(property: Node): Boolean =
+    (property \ "@type" text) == "UniProtKB accession"
+
+  private def isSeed(property: Node): Boolean =
+    (property \ "@type" text) == "isSeed"
+
+  private def nonRepresentativeMembers =
+    (xml \ "member" \ "dbReference") filter isUniProtDBReference
+
+  private def accession(dbRef: Node): String =
+    (dbRef \ "property").filter(isUniProtAccessionProperty).head text
 
 }
