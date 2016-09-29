@@ -6,25 +6,25 @@ import com.bio4j.angulillos._
 import scala.xml._
 import scala.compat.java8.OptionConverters._
 
-case class obo(xml: Elem) extends AnyVal {
+case class Obo(xml: Elem) extends AnyVal {
 
-  def members: Seq[XmlTerm] =
+  def terms: Seq[XmlTerm] =
     (xml \ "term").filter( term => (term \ "isObsolete").isEmpty ) map XmlTerm
 
   def isA: Seq[Rel] =
-    members flatMap { _.isA }
+    terms flatMap { _.isA }
 
   def partOf: Seq[Rel] =
-    members flatMap { _.partOf }
+    terms flatMap { _.partOf }
 
   def regulates: Seq[Rel] =
-    members flatMap { _.regulates }
+    terms flatMap { _.regulates }
 
   def negativelyRegulates: Seq[Rel] =
-    members flatMap { _.negativelyRegulates }
+    terms flatMap { _.negativelyRegulates }
 
   def positivelyRegulates: Seq[Rel] =
-    members flatMap { _.positivelyRegulates }
+    terms flatMap { _.positivelyRegulates }
 }
 
 case class XmlTerm(val xml: Node) extends AnyVal {
