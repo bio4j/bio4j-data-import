@@ -104,7 +104,7 @@ case class ImportProcess[V,E](val graph: GOGraph[V,E]) {
 
 
   private def termByID(id: String) =
-    graph.term.byId.find(id).asScala
+    graph.term.id.index.find(id).asScala
 
   private def sourceAndTarget(rel: Rel): Option[(G#Term, G#Term)] =
     termByID(rel.sourceID).flatMap { source =>
