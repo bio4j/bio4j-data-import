@@ -12,38 +12,35 @@ case class EnzymeClass(val line: String) extends AnyVal {
       .drop(9)
       .trim
       .stripSuffix(".")
-}
 
-case object EnzymeClasses {
+  def isClass =
+    classID == ID
 
-  def idFragments(id: String): (String,String,String,String) = {
+  def isSubClass =
+    subClassID == ID
 
-    val fragments = id.split('.').take(4)
+  def isSubSubClass =
+    subSubClassID == ID
+
+  def IDFragments: (String,String,String,String) = {
+
+    val fragments = ID.split('.').take(4)
 
     (fragments(0), fragments(1), fragments(2), fragments(3))
   }
 
-  def isEnzyme(id: String) =
-    idFragments(id) match {
-      case (_,_,_,b) if(b != "-") => true
-      case _                      => false
-    }
+  def classID = {
+    val frmgts = IDFragments
+    s"${frmgts._1}.-.-.-"
+  }
 
-  def isSubSubClass(id: String) =
-    idFragments(id) match {
-      case (_,_,b,"-") if(b != "-") => true
-      case _                        => false
-    }
+  def subClassID = {
+    val frmgts = IDFragments
+    s"${frmgts._1}.${frmgts._2}.-.-"
+  }
 
-  def isSubClass(id: String) =
-    idFragments(id) match {
-      case (_,b,"-",_) if(b != "-") => true
-      case _                        => false
-    }
-
-  def isClass(id: String) =
-    idFragments(id) match {
-      case (_,"-",_,_)  => true
-      case _            => false
-    }
+  def subSubClassID = {
+    val frmgts = IDFragments
+    s"${frmgts._1}.${frmgts._2}.${frmgts._3}.-"
+  }
 }

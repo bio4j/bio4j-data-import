@@ -38,6 +38,9 @@ case class Entry(val lines: Seq[String]) extends AnyVal {
       .filter(_.startsWith("CC"))
       .map(_.trim)
       .mkString(" ")
+
+  def subSubClassID =
+    s"${ID.reverse.dropWhile(_ != '.').reverse}-"
 }
 
 case object Entry {
