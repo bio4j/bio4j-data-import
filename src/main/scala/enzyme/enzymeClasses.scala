@@ -44,3 +44,34 @@ case class EnzymeClass(val line: String) extends AnyVal {
     s"${frmgts._1}.${frmgts._2}.${frmgts._3}.-"
   }
 }
+
+case object EnzymeClass {
+
+  /*
+    The Enzyme source file `enzclass.txt` starts with:
+
+    ```
+    ---------------------------------------------------------------------------
+            ENZYME nomenclature database
+            SIB Swiss Institute of Bioinformatics; Geneva, Switzerland
+    ----------------------------------------------------------------------------
+
+    Description: Definition of enzyme classes, subclasses and sub-subclasses
+    Name:        enzclass.txt
+    Release:     07-Sep-2016
+
+    ----------------------------------------------------------------------------
+
+    1. -. -.-  Oxidoreductases.
+    1. 1. -.-   Acting on the CH-OH group of donors.
+    ```
+
+    thus the the `drop(11)`. It also has empty lines now and then.
+  */
+  def fromLines(lines: Seq[String]): Seq[EnzymeClass] =
+    lines
+      .drop(11)
+      .filter(_isEmpty)
+      .map(EnzymeClass(_))
+
+}
