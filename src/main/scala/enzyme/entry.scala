@@ -49,4 +49,50 @@ case object Entry {
   */
   def isValid(entry: Entry): Boolean =
     !( entry.description.startsWith("Deleted entry") || entry.description.startsWith("Transferred entry") )
+
+  @annotation.tailrec
+  def entryLinesRec(
+    currentLine: Option[String],
+    linesLeft: Seq[String],
+    entryAcc: Seq[String],
+    acc: Seq[Seq[String]]
+  )
+  : Seq[Seq[String]] =
+    currentLine match {
+      case None       => acc
+      case Some(line) => {
+
+        if(isEndLine(line))
+          entryLinesRec(
+            currentLine = linesLeft.headOption,
+            linesLeft   = linesLeft.tail,
+            entryAcc    = Seq(),
+            acc         = acc :+ entryAcc
+          )
+        else
+          entryLinesRec(
+            currentLine = linesLeft.headOption,
+            linesLeft   = linesLeft.tail,
+            entryAcc    = entryAcc :+ line,
+            acc         = acc
+          )
+      }
+    }
+
+  def entryLines(lines: Seq[String]): Seq[Seq[String]] =
+    entryLinesRec(
+      currentLine = lines.headOption,
+      linesLeft   = lines.tail,
+      entryAcc    = Seq(),
+      acc         = Seq()
+    )
+
+  def isEndLine(line: String) =
+    line.startsWith("//")
+
+  def fromLines(lines: Seq[String]): Seq[Entry] =
+    entryLines(lines) map { Entry(_) }
+
+  def validEntriesFromLines(lines: Seq[String]): Seq[Entry] =
+    fromLines(lines) filter isValid
 }
