@@ -140,6 +140,9 @@ case class Entry(val entry: Elem) extends AnyVal {
 
   def dbReference(tpe: String): NodeSeq =
     entry \ "dbReference" filter { elem => (elem \ "@type" text) == tpe }
+
+  def dbReferenceIDs(tpe: String): Seq[String] =
+    dbReference(tpe) map { _ \ "@id" text }
 }
 
 case class UniProtLocation(val begin: Int, val end: Int)

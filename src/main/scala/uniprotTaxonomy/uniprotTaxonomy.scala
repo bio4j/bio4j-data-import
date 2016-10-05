@@ -19,7 +19,7 @@ case class Process[V,E](val graph: UniProtNCBITaxonomyGraph[V,E]) {
           {
 
             val canonicalProtein =
-              g.uniProtGraph.protein.id.index.find(entry.accession).asScala
+              g.uniProtGraph.protein.accession.index.find(entry.accession).asScala
 
             val organism =
               g.ncbiTaxonomyGraph.taxon.id.index.find(entry.organism).asScala
