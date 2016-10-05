@@ -137,6 +137,9 @@ case class Entry(val entry: Elem) extends AnyVal {
         .map { _ \ "id" text }
         .head
   }
+
+  def dbReference(tpe: String): NodeSeq =
+    entry \ "dbReference" filter { elem => (elem \ "@type" text) == tpe }
 }
 
 case class UniProtLocation(val begin: Int, val end: Int)
