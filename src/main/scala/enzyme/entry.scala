@@ -40,6 +40,12 @@ case class Entry(val lines: Seq[String]) extends AnyVal {
       .filter(_.startsWith("CC"))
       .map(_.trim)
       .mkString(" ")
+}
 
-
+case object Entry {
+  /*
+    See ftp://ftp.expasy.org/databases/enzyme/enzuser.txt
+  */
+  def isValid(entry: Entry): Boolean =
+    !( entry.description.startsWith("Deleted entry") || entry.description.startsWith("Transferred entry") )
 }
