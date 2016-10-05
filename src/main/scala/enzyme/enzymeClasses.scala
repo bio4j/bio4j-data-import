@@ -77,6 +77,6 @@ case object EnzymeClass {
   def fromLines(lines: Seq[String]): Seq[EnzymeClass] =
     lines
       .drop(11)
-      .filter(_isEmpty)
+      .filter(_.isEmpty)
       .map(EnzymeClass(_))
 }
