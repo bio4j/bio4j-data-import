@@ -9,8 +9,6 @@ case class Process[V,E](val graph: ENZYMEGraph[V,E]) {
 
   type G = ENZYMEGraph[V,E]
 
-  import EnzymeClass._
-
   // first import all classes
   val enzymeClasses =
     GraphProcess.generically[V,E] (
@@ -102,12 +100,12 @@ case class Process[V,E](val graph: ENZYMEGraph[V,E]) {
         )
     )
 
-    private def findClass(g: G, id: String): Option[G#EnzymeClass] =
-      g.enzymeClass.id.index.find(id).asScala
+  private def findClass(g: G, id: String): Option[G#EnzymeClass] =
+    g.enzymeClass.id.index.find(id).asScala
 
-    private def findSubClass(g: G, id: String): Option[G#EnzymeSubClass] =
-      g.enzymeSubClass.id.index.find(id).asScala
+  private def findSubClass(g: G, id: String): Option[G#EnzymeSubClass] =
+    g.enzymeSubClass.id.index.find(id).asScala
 
-    private def findSubSubClass(g: G, id: String): Option[G#EnzymeSubSubClass] =
-      g.enzymeSubSubClass.id.index.find(id).asScala
+  private def findSubSubClass(g: G, id: String): Option[G#EnzymeSubSubClass] =
+    g.enzymeSubSubClass.id.index.find(id).asScala
 }
