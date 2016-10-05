@@ -7,7 +7,7 @@ bucketSuffix  := "era7.com"
 scalaVersion := "2.11.8"
 
 libraryDependencies ++= Seq (
-  "bio4j"                   % "bio4j"               % "0.12.0-194-gc8a4ba8",
+  "bio4j"                   % "bio4j"               % "0.12.0-220-gbe3a91e",
   "org.scala-lang.modules" %% "scala-xml"           % "1.0.5",
   "org.scala-lang.modules" %% "scala-java8-compat"  % "0.8.0-RC3",
   "ohnosequences"          %% "fastarious"          % "0.6.0"

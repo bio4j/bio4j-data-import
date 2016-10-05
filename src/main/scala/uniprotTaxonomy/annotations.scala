@@ -12,8 +12,11 @@ case class EntryTaxonomyAnnotations(val entry: Elem) extends AnyVal {
     (entry \ "organism" \ "dbReference" \ "@id").head.text
 }
 
-case object  EntryTaxonomyAnnotations {
+case object EntryTaxonomyAnnotations {
 
   implicit def entryTaxonomyAnnotations(entry: Entry): EntryTaxonomyAnnotations =
     EntryTaxonomyAnnotations(entry.entry)
+
+  implicit def asEntry(entryTaxonomyAnnotations: EntryTaxonomyAnnotations): Entry =
+    Entry(entryTaxonomyAnnotations.entry)
 }
