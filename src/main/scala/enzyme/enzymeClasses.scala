@@ -8,7 +8,7 @@ case class EnzymeClass(val line: String) extends AnyVal {
   def ID: String =
     line
       .take(9)
-      .filter(_ == " ")
+      .filter(_ != ' ')
 
   /*
     We don't want to store the description with a dot at the end!
@@ -72,11 +72,22 @@ case object EnzymeClass {
     1. 1. -.-   Acting on the CH-OH group of donors.
     ```
 
-    thus the the `drop(11)`. It also has empty lines now and then.
+    thus the the `drop(11)`; it also ends with:
+
+    ```
+    ----------------------------------------------------------------------------
+    Copyrighted by the SIB Swiss Institute of Bioinformatics.
+    There are no restrictions on its use by any institutions as long as
+    its content is in no way modified.
+    ----------------------------------------------------------------------------
+    ```
+
+    and last but not least, it has empty lines now and then.
   */
   def fromLines(lines: Seq[String]): Seq[EnzymeClass] =
     lines
       .drop(11)
-      .filter(_.isEmpty)
+      .dropRight(5)
+      .filter(_.nonEmpty)
       .map(EnzymeClass(_))
 }

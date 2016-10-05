@@ -5,38 +5,41 @@ case class Entry(val lines: Seq[String]) extends AnyVal {
   def ID: String =
     lines.
       filter(_.startsWith("ID"))
-      .map(_.trim)
       .head
+      .stripPrefix("ID")
+      .trim
 
   def description: String =
     lines
       .filter(_.startsWith("DE"))
-      .map(_.trim)
+      .map(_.stripPrefix("DE").trim.stripSuffix("."))
       .mkString(" ")
 
   def alternativeNames: Seq[String] =
     lines
       .filter(_.startsWith("AN"))
-      .map(_.trim.stripSuffix("."))
+      .map(_.stripPrefix("AN").trim)
+      .mkString(" ")
+      .split('.').toList
 
   def cofactors: Seq[String] =
     lines.
       filter(_.startsWith("CF"))
-      .map(_.trim)
+      .map(_.stripPrefix("CF").trim)
       .mkString("")
-      .split(';')
+      .split(';').toList
       .map(_.trim.stripSuffix("."))
 
   def catalyticActivity: String =
     lines
       .filter(_.startsWith("CA"))
-      .map(_.trim)
+      .map(_.stripPrefix("CA").trim)
       .mkString(" ")
 
   def comments: String =
     lines
       .filter(_.startsWith("CC"))
-      .map(_.trim)
+      .map(_.stripPrefix("CC").trim)
       .mkString(" ")
 
   def subSubClassID =
@@ -65,14 +68,14 @@ case object Entry {
         if(isEndLine(line))
           entryLinesRec(
             currentLine = linesLeft.headOption,
-            linesLeft   = linesLeft.tail,
+            linesLeft   = if(linesLeft.isEmpty) Seq() else linesLeft.tail,
             entryAcc    = Seq(),
             acc         = acc :+ entryAcc
           )
         else
           entryLinesRec(
             currentLine = linesLeft.headOption,
-            linesLeft   = linesLeft.tail,
+            linesLeft   = if(linesLeft.isEmpty) Seq() else linesLeft.tail,
             entryAcc    = entryAcc :+ line,
             acc         = acc
           )
@@ -90,8 +93,14 @@ case object Entry {
   def isEndLine(line: String) =
     line.startsWith("//")
 
+  /*
+    Again funny file
+  */
   def fromLines(lines: Seq[String]): Seq[Entry] =
-    entryLines(lines) map { Entry(_) }
+    entryLines(
+      lines.dropWhile( l => l.startsWith("CC") || l.startsWith("//") )
+    )
+      .map { Entry(_) }
 
   def validEntriesFromLines(lines: Seq[String]): Seq[Entry] =
     fromLines(lines) filter isValid

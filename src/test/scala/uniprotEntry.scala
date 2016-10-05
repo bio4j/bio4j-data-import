@@ -116,7 +116,7 @@ class Bio4jdataimportTest extends FunSuite {
     entries foreach { entry => println { entry.accession } }
   }
 
-  test("parse all SwissProt") {
+  ignore("parse all SwissProt") {
 
     import better.files._
 
