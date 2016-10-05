@@ -1,7 +1,5 @@
 package com.bio4j.data.enzyme
 
-import scala.compat.java8.OptionConverters._
-
 case class Entry(val lines: Seq[String]) extends AnyVal {
 
   def ID: String =
@@ -48,38 +46,4 @@ case object Entry {
   */
   def isValid(entry: Entry): Boolean =
     !( entry.description.startsWith("Deleted entry") || entry.description.startsWith("Transferred entry") )
-}
-
-case object EnzymeClasses {
-
-  def idFragments(id: String): (String,String,String,String) = {
-
-    val fragments = id.split('.').take(4)
-    
-    (fragments(0), fragments(1), fragments(2), fragments(3))
-  }
-
-  def isEnzyme(id: String) =
-    idFragments(id) match {
-      case (_,_,_,b) if(b != "-") => true
-      case _                      => false
-    }
-
-  def isSubSubClass(id: String) =
-    idFragments(id) match {
-      case (_,_,b,"-") if(b != "-") => true
-      case _                        => false
-    }
-
-  def isSubClass(id: String) =
-    idFragments(id) match {
-      case (_,b,"-",_) if(b != "-") => true
-      case _                        => false
-    }
-
-  def isClass(id: String) =
-    idFragments(id) match {
-      case (_,"-",_,_)  => true
-      case _            => false
-    }
 }
