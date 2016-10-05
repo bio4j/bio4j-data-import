@@ -2,11 +2,17 @@ package com.bio4j.data.enzyme
 
 case class EnzymeClass(val line: String) extends AnyVal {
 
+  /*
+    In the `enzclass.txt` source file the id always takes 9 characters, but it has funny empty spaces around.
+  */
   def ID: String =
     line
       .take(9)
       .filter(_ == " ")
 
+  /*
+    We don't want to store the description with a dot at the end!
+  */
   def description: String =
     line
       .drop(9)
@@ -73,5 +79,4 @@ case object EnzymeClass {
       .drop(11)
       .filter(_isEmpty)
       .map(EnzymeClass(_))
-
 }
