@@ -2,12 +2,14 @@ package com.bio4j.data.enzyme
 
 case class Entry(val lines: Seq[String]) extends AnyVal {
 
-  def ID: String =
-    lines.
-      filter(_.startsWith("ID"))
-      .head
-      .stripPrefix("ID")
-      .trim
+  def ID: EnzymeID =
+    EnzymeID(
+      lines.
+        filter(_.startsWith("ID"))
+        .head
+        .stripPrefix("ID")
+        .trim
+    )
 
   def description: String =
     lines
@@ -43,7 +45,7 @@ case class Entry(val lines: Seq[String]) extends AnyVal {
       .mkString(" ")
 
   def subSubClassID =
-    s"${ID.reverse.dropWhile(_ != '.').reverse}-"
+    s"${ID.value.reverse.dropWhile(_ != '.').reverse}-"
 }
 
 case object Entry {

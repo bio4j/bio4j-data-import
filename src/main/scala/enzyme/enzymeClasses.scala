@@ -5,10 +5,12 @@ case class EnzymeClass(val line: String) extends AnyVal {
   /*
     In the `enzclass.txt` source file the id always takes 9 characters, but it has funny empty spaces around.
   */
-  def ID: String =
-    line
-      .take(9)
-      .filter(_ != ' ')
+  def ID: EnzymeID =
+    EnzymeID(
+      line
+        .take(9)
+        .filter(_ != ' ')
+    )
 
   /*
     We don't want to store the description with a dot at the end!
@@ -18,22 +20,18 @@ case class EnzymeClass(val line: String) extends AnyVal {
       .drop(9)
       .trim
       .stripSuffix(".")
+}
+
+case class EnzymeID(val value: String) extends AnyVal {
 
   def isClass =
-    classID == ID
+    classID == value
 
   def isSubClass =
-    subClassID == ID
+    subClassID == value
 
   def isSubSubClass =
-    subSubClassID == ID
-
-  def IDFragments: (String,String,String,String) = {
-
-    val fragments = ID.split('.').take(4)
-
-    (fragments(0), fragments(1), fragments(2), fragments(3))
-  }
+    subSubClassID == value
 
   def classID = {
     val frmgts = IDFragments
@@ -48,6 +46,13 @@ case class EnzymeClass(val line: String) extends AnyVal {
   def subSubClassID = {
     val frmgts = IDFragments
     s"${frmgts._1}.${frmgts._2}.${frmgts._3}.-"
+  }
+
+  private def IDFragments: (String,String,String,String) = {
+
+    val fragments = value.split('.').take(4)
+
+    (fragments(0), fragments(1), fragments(2), fragments(3))
   }
 }
 
