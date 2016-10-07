@@ -16,10 +16,10 @@ case class Process[V,E](val graph: ENZYMEGraph[V,E]) {
       (enzClass: EnzymeClass, g: G) =>
         (
           graph,
-          if(enzClass.isClass)
+          if(enzClass.ID.isClass)
             Some(
               g.enzymeClass.addVertex
-                .set(g.enzymeClass.id, enzClass.ID)
+                .set(g.enzymeClass.id, enzClass.ID.value)
             )
           else
             None
@@ -34,13 +34,13 @@ case class Process[V,E](val graph: ENZYMEGraph[V,E]) {
         (
           graph,
 
-          if(enzClass.isSubClass) {
+          if(enzClass.ID.isSubClass) {
 
             val subClass =
               g.enzymeSubClass.addVertex
-                .set(g.enzymeSubClass.id, enzClass.ID)
+                .set(g.enzymeSubClass.id, enzClass.ID.value)
 
-            findClass(g, enzClass.classID) map { clss =>
+            findClass(g, enzClass.ID.classID) map { clss =>
               ( subClass, g.subClasses.addEdge(clss, subClass) )
             }
           }
@@ -57,13 +57,13 @@ case class Process[V,E](val graph: ENZYMEGraph[V,E]) {
         (
           graph,
 
-          if(enzClass.isSubSubClass) {
+          if(enzClass.ID.isSubSubClass) {
 
             val subSubClass =
               g.enzymeSubSubClass.addVertex
-                .set(g.enzymeSubSubClass.id, enzClass.ID)
+                .set(g.enzymeSubSubClass.id, enzClass.ID.value)
 
-            findSubClass(g, enzClass.subClassID) map { subClass =>
+            findSubClass(g, enzClass.ID.subClassID) map { subClass =>
               ( subSubClass, g.subSubClasses.addEdge(subClass, subSubClass) )
             }
           }
@@ -81,7 +81,7 @@ case class Process[V,E](val graph: ENZYMEGraph[V,E]) {
           graph,
           {
             val enzyme = g.enzyme.addVertex
-              .set(g.enzyme.id, entry.ID)
+              .set(g.enzyme.id, entry.ID.value)
               .set(g.enzyme.name, entry.description)
               .set(g.enzyme.alternateNames, entry.alternativeNames.toArray)
               .set(g.enzyme.cofactors, entry.cofactors.toArray)
@@ -89,7 +89,7 @@ case class Process[V,E](val graph: ENZYMEGraph[V,E]) {
               .set(g.enzyme.catalyticActivity, entry.catalyticActivity)
 
             val subsubclass =
-              findSubSubClass( g, entry.subSubClassID )
+              findSubSubClass( g, entry.ID.subSubClassID )
 
             val memberOf = subsubclass.foreach { ssc =>
               g.enzymes.addEdge(ssc, enzyme)
