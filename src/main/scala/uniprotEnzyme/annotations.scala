@@ -6,7 +6,7 @@ import com.bio4j.data.enzyme._
 
 case class EntryEnzymeAnnotations(val entry: Elem) extends AnyVal {
 
-  def IDs: Seq[EnzymeID] =
+  def enzymeIDs: Seq[EnzymeID] =
     this.dbReferenceIDs("EC").map( EnzymeID(_) )
 }
 
