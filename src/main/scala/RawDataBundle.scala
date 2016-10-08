@@ -1,34 +1,36 @@
 package com.bio4j.data
 
 import ohnosequences.statika._
+import ohnosequences.awstools._, s3._
 import java.net.URL
 import sys.process._
 import better.files._
 
 
-abstract class RawDataBundle(
-  val url: URL,
-  val baseDirectory: File
+abstract class GetRawData(
+  val urls: Set[URL],
+  val baseDirectory: File,
+  val gunzip: Boolean
 ) extends AnyBundle {
 
-  lazy val destination: File = (baseDirectory / url.getFile).createIfNotExists()
+  def destination(url: URL): File = (baseDirectory / url.getFile).createIfNotExists()
+
+  def inputStream(url: URL) = {
+    val stream = url.openStream
+    if (gunzip && url.getFile.endsWith(".gz")) stream.gzipped
+    else stream
+  }
 
   def instructions: AnyInstructions = {
-
-    lazy val inputStream = {
-      val stream = url.openStream
-      if (url.getFile.endsWith(".gz")) stream.gzipped
-      else stream
-    }
-
     LazyTry {
       for {
-        is <- inputStream.autoClosed
-        os <- destination.outputStream
-      } yield is > os
+        url  <- urls
+        inS  <- inputStream(url).autoClosed
+        outS <- destination(url).outputStream
+      } yield inS pipeTo outS
       // TODO: some retry logic?
     } ->-
-    say(s"${url} is downloaded and unpacked to ${destination}")
+    say(s"Files are downloaded to ${baseDirectory}")
   }
 
 }
