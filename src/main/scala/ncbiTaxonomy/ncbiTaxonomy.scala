@@ -10,7 +10,7 @@ case class Process[V,E](val graph: NCBITaxonomyGraph[V,E]) {
   type G = NCBITaxonomyGraph[V,E]
 
   val nodes = GraphProcess.generically[V,E] (graph,
-    (node: Node, g: G) => {
+    (node: TaxonNode, g: G) => {
 
       val vertex = g.taxon.addVertex
         .set(g.taxon.id, node.taxID)
@@ -21,7 +21,7 @@ case class Process[V,E](val graph: NCBITaxonomyGraph[V,E]) {
   )
 
   val parents = GraphProcess.generically[V,E] (graph,
-    (node: Node, g: G) => {
+    (node: TaxonNode, g: G) => {
 
       val srcOpt = g.taxon.id.index.find(node.taxID).asScala
       val tgtOpt = g.taxon.id.index.find(node.parentTaxID).asScala
@@ -35,12 +35,12 @@ case class Process[V,E](val graph: NCBITaxonomyGraph[V,E]) {
   )
 
   val names = GraphProcess.generically[V,E] (graph,
-    (nameRow: Name, g: G) => {
+    (taxName: ScientificName, g: G) => {
 
-      val taxon = g.taxon.id.index.find(nameRow.taxID).asScala
+      val taxon = g.taxon.id.index.find(taxName.taxID).asScala
 
       val vertices = taxon.map {
-        _.set(g.taxon.name, nameRow.scientificName)
+        _.set(g.taxon.name, taxName.scientificName)
       }
 
       (graph, vertices)
