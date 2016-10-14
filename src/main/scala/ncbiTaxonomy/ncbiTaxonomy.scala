@@ -23,14 +23,19 @@ case class Process[V,E](val graph: NCBITaxonomyGraph[V,E]) {
   val parents = GraphProcess.generically[V,E] (graph,
     (node: TaxonNode, g: G) => {
 
-      val srcOpt = g.taxon.id.index.find(node.taxID).asScala
-      val tgtOpt = g.taxon.id.index.find(node.parentTaxID).asScala
+      val edge: Option[G#Parent] =
+        // NOTE: root has its own ID for parent, but it should have a cyclic edge
+        if (node.taxID == node.parentTaxID) None
+        else {
+          val srcOpt = g.taxon.id.index.find(node.taxID).asScala
+          val tgtOpt = g.taxon.id.index.find(node.parentTaxID).asScala
 
-      val edges = (srcOpt zip tgtOpt).map { case (s, t) =>
-        g.parent.addEdge(s, t)
-      }
+          (srcOpt zip tgtOpt).headOption.map { case (s, t) =>
+            g.parent.addEdge(s, t)
+          }
+        }
 
-      (graph, edges)
+      (graph, edge)
     }
   )
 
@@ -39,14 +44,11 @@ case class Process[V,E](val graph: NCBITaxonomyGraph[V,E]) {
 
       val taxon = g.taxon.id.index.find(taxName.taxID).asScala
 
-      val vertices = taxon.map {
+      val vertex = taxon.map {
         _.set(g.taxon.name, taxName.scientificName)
       }
 
-      (graph, vertices)
+      (graph, vertex)
     }
   )
-
-  private def findNode(g: G, id: String): Option[G#Taxon] =
-    g.taxon.id.index.find(id).asScala
 }
