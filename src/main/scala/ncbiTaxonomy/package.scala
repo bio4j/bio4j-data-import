@@ -3,7 +3,7 @@ package com.bio4j.data
 
 package object ncbiTaxonomy {
 
-  val dmpSeparator = "\t|\t" // or just "|"?
+  val dmpSeparator = '|'
 
 
   implicit class DmpRow(val str: String) extends AnyVal {
@@ -15,12 +15,14 @@ package object ncbiTaxonomy {
   }
 
 
-  def nodesFromDmp(lines: Iterator[String]): Iterator[TaxonNode] =
-    lines.map(TaxonNode)
+  implicit class DmpIterator(val lines: Iterator[String]) extends AnyVal {
 
-  def namesFromDmp(lines: Iterator[String]): Iterator[ScientificName] = {
-    lines.filter {
-      _.dmpColumns(3).trim == "scientific name"
-    }.map(ScientificName)
+    def nodes: Iterator[TaxonNode] = lines.map(TaxonNode)
+
+    def scientificNames: Iterator[ScientificName] = {
+      lines.filter {
+        _.dmpColumns(3).trim == "scientific name"
+      }.map(ScientificName)
+    }
   }
 }
