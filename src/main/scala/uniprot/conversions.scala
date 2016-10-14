@@ -108,7 +108,7 @@ case object conversions {
       case "Domain"                     => UniProtGraph.KeywordCategories.domain
       case "Ligand"                     => UniProtGraph.KeywordCategories.ligand
       case "Molecular function"         => UniProtGraph.KeywordCategories.molecularFunction
-      case "null"                       => ??? // TODO do something with this
+      case "null"                       => UniProtGraph.KeywordCategories.NULL
       case "PTM"                        => UniProtGraph.KeywordCategories.PTM
       case "Technical term"             => UniProtGraph.KeywordCategories.technicalTerm
     }
