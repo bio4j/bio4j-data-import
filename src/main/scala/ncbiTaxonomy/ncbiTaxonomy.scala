@@ -12,7 +12,7 @@ case class Process[V,E](val graph: NCBITaxonomyGraph[V,E]) {
   val nodes = GraphProcess.generically[V,E] (graph,
     (node: TaxonNode, g: G) => {
 
-      val vertex = g.taxon.addVertex
+      val vertex: G#Taxon = g.taxon.addVertex
         .set(g.taxon.id, node.taxID)
         .set(g.taxon.taxonomicRank, node.rank)
 
@@ -24,7 +24,7 @@ case class Process[V,E](val graph: NCBITaxonomyGraph[V,E]) {
     (node: TaxonNode, g: G) => {
 
       val edge: Option[G#Parent] =
-        // NOTE: root has its own ID for parent, but it should have a cyclic edge
+        // NOTE: root has same ID for its parent, but it shouldn't have a cyclic edge
         if (node.taxID == node.parentTaxID) None
         else {
           val srcOpt = g.taxon.id.index.find(node.taxID).asScala
@@ -42,9 +42,9 @@ case class Process[V,E](val graph: NCBITaxonomyGraph[V,E]) {
   val names = GraphProcess.generically[V,E] (graph,
     (taxName: ScientificName, g: G) => {
 
-      val taxon = g.taxon.id.index.find(taxName.taxID).asScala
+      val taxon: Option[G#Taxon] = g.taxon.id.index.find(taxName.taxID).asScala
 
-      val vertex = taxon.map {
+      val vertex: Option[G#Taxon] = taxon.map {
         _.set(g.taxon.name, taxName.scientificName)
       }
 
