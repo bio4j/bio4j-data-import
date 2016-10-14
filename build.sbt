@@ -23,5 +23,6 @@ dependencyOverrides := Set (
 )
 
 wartremoverExcluded ++= Seq(
-  baseDirectory.value/"src"/"main"/"scala"/"uniprot"/"uniprotEntry.scala"
+  baseDirectory.value/"src"/"main"/"scala"/"uniprot"/"uniprotEntry.scala",
+  baseDirectory.value/"src"/"test"/"scala"/"ncbiTaxonomy.scala"
 )
