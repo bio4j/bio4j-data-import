@@ -5,6 +5,7 @@ import com.bio4j.model._
 import com.bio4j.angulillos._
 import scala.xml._
 import scala.compat.java8.OptionConverters._
+import bio4j.data.uniprot.flat.{ Entry => FEntry }
 
 // from keywords-all.tsv
 case class KeywordRow(val id: String, val description: String, val category: String)
@@ -16,19 +17,23 @@ case class Process[V,E](val graph: UniProtGraph[V,E]) {
   val entryProteins =
     GraphProcess.generically[V,E] (
       graph,
-      (entry: Entry, g: G) =>
+      (entry: FEntry, g: G) => {
+
         (
           graph,
           Seq (
             g.protein.addVertex
-            .set( g.protein.id,           entry.canonicalID     )
-            .set( g.protein.accession,    entry.accession       )
-            .set( g.protein.fullName,     entry.proteinFullName )
-            .set( g.protein.existence,    entry.existence       )
-            .set( g.protein.dataset,      entry.dataset         )
-            .set( g.protein.sequence,     entry.sequence        )
+            .set(g.protein.id, entry.accessionNumbers.primary) // TODO get from canonical isoform etc
+            .set(g.protein.accession, entry.accessionNumbers.primary)
+            .set(g.protein.fullName,  entry.description.recommendedName.map(_.full) getOrElse entry.description.submittedNames.head.full )
+            .set(g.protein.existence, conversions.proteinExistenceToExistenceEvidence(entry.proteinExistence))
+            .set(g.protein.dataset, conversions.statusToDatasets(entry.identification.status))
+            .set(g.protein.sequence, entry.sequence.value)
+            .set(g.protein.sequenceLength, entry.sequenceHeader.length: Integer)
           )
         )
+      }
+
     )
 
   /*
