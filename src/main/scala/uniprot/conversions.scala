@@ -2,7 +2,6 @@ package com.bio4j.data.uniprot
 
 import com.bio4j.model._
 import com.bio4j.angulillos._
-import scala.xml._
 import scala.compat.java8.OptionConverters._
 import bio4j.data.uniprot._
 
@@ -80,7 +79,12 @@ case object conversions {
       case TURN       => UniProtGraph.FeatureTypes.turn
     }
 
-  
+  def commentTopic(c: Comment): UniProtGraph.CommentTopics =
+    c match {
+      case _ => ???
+    }
+
+
 
   val stringToGeneLocation: String => UniProtGraph.GeneLocations =
     {
