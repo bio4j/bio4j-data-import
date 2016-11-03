@@ -1,6 +1,6 @@
-name          := "import"
+name          := "release.generic"
 organization  := "bio4j"
-description   := "generic bio4j data import"
+description   := "generic import code for data releases"
 
 bucketSuffix  := "era7.com"
 
@@ -25,6 +25,6 @@ dependencyOverrides := Set (
 )
 
 wartremoverExcluded ++= Seq(
-  baseDirectory.value/"src"/"main"/"scala"/"uniprot"/"uniprotEntry.scala",
+  baseDirectory.value/"src"/"main"/"scala"/"uniprot"/"uniprot.scala",
   baseDirectory.value/"src"/"test"/"scala"/"ncbiTaxonomy.scala"
 )
