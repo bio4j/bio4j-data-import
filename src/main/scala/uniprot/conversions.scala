@@ -79,6 +79,12 @@ case object conversions {
       case TURN       => UniProtGraph.FeatureTypes.turn
     }
 
+  def featureFromAsInt(from: String): Int =
+    ???
+
+  def featureToAsInt(to: String): Int =
+    ???
+
   def commentTopic(c: Comment): UniProtGraph.CommentTopics =
     c match {
       case _ => ???
