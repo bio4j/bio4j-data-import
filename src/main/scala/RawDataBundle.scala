@@ -10,12 +10,13 @@ import better.files._
 
 
 abstract class GetRawData(
-  val urls: Set[URL],
+  val urls: Seq[URL],
   val baseDirectory: File,
   val gunzip: Boolean
-) extends AnyBundle {
+)(deps: AnyBundle*) extends Bundle(deps: _*) {
 
   def destination(url: URL): File = (baseDirectory / url.getFile).createIfNotExists()
+  def files: Seq[File] = urls.map(destination)
 
   def inputStream(url: URL) = {
     val stream = url.openStream
@@ -41,7 +42,7 @@ abstract class GetRawData(
 abstract class CopyToS3(
   val files: Seq[File],
   val s3folder: S3Folder
-) extends AnyBundle {
+)(deps: AnyBundle*) extends Bundle(deps: _*) {
 
   lazy val s3client = S3.create(new InstanceProfileCredentialsProvider())
   lazy val transferManager = new TransferManager(s3client.s3)
@@ -70,7 +71,7 @@ abstract class CopyToS3(
 abstract class GetS3Copy(
   val s3copy: CopyToS3,
   val baseDirectory: File
-) extends AnyBundle {
+)(deps: AnyBundle*) extends Bundle(deps: _*) {
 
   lazy val s3client = S3.create(new InstanceProfileCredentialsProvider())
   lazy val transferManager = new TransferManager(s3client.s3)
