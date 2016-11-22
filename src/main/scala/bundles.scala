@@ -10,7 +10,7 @@ import better.files._
 
 case object bundles {
 
-  val releasesPrefix = S3Folder("releases.bio4j.com", "2016_12_01")
+  val s3ReleasesPrefix = S3Folder("releases.bio4j.com", "2016_12_01")
 
   abstract class GetRawData(
     val urls: Seq[URL],
@@ -18,8 +18,16 @@ case object bundles {
     val gunzip: Boolean
   )(deps: AnyBundle*) extends Bundle(deps: _*) {
 
-    def destination(url: URL): File = (baseDirectory / url.getFile).createIfNotExists()
-    def files: Seq[File] = urls.map(destination)
+    def destination(url: URL): File = {
+      val urlFile = url.getFile
+      val name =
+        if (gunzip && urlFile.endsWith(".gz")) urlFile.stripSuffix(".gz")
+        else urlFile
+
+      (baseDirectory / name).createIfNotExists()
+    }
+
+    lazy val files: Seq[File] = urls.map(destination)
 
     def inputStream(url: URL) = {
       val stream = url.openStream

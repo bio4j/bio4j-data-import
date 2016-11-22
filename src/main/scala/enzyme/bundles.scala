@@ -6,25 +6,34 @@ import better.files._
 
 case object bundles {
 
+  case object fileNames {
+    val enzyme = "enzyme.dat"
+    val enzclass = "enzclass.txt"
+  }
+
   case object rawData extends GetRawData(
     urls = Seq(
-      "enzyme.dat",
-      "enzclass.txt"
+      fileNames.enzyme,
+      fileNames.enzclass
     ).map { suffix =>
       new URL("ftp", "ftp.ebi.ac.uk", s"/pub/databases/enzyme/release/${suffix}")
     },
-    baseDirectory = file"/media/ephemeral0/enzyme/data/",
+    baseDirectory = file"/media/ephemeral0/data/enzyme/",
     gunzip = false
   )()
 
   case object copyData extends CopyToS3(
     rawData.files,
-    releasesPrefix / "data" / "enzyme" /
+    s3ReleasesPrefix / "data" / "enzyme" /
   )()
 
   case object mirroredData extends GetS3Copy(
     copyData,
-    file"/media/ephemeral0/enzyme/data/"
-  )()
+    file"/media/ephemeral0/data/enzyme/"
+  )() {
+
+    val enzyme   = baseDirectory / fileNames.enzyme
+    val enzclass = baseDirectory / fileNames.enzclass
+  }
 
 }
