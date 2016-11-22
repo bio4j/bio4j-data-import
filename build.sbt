@@ -25,7 +25,8 @@ dependencyOverrides := Set (
   "com.github.pathikrit"   %% "better-files"  % "2.16.0"
 )
 
-wartremoverExcluded ++= Seq(
-  baseDirectory.value/"src"/"main"/"scala"/"uniprot"/"uniprotEntry.scala",
-  baseDirectory.value/"src"/"test"/"scala"/"ncbiTaxonomy.scala"
-)
+wartremoverErrors in (Compile, compile) := Seq()
+// wartremoverExcluded ++= Seq(
+//   baseDirectory.value/"src"/"main"/"scala"/"uniprot"/"uniprotEntry.scala",
+//   baseDirectory.value/"src"/"test"/"scala"/"ncbiTaxonomy.scala"
+// )
