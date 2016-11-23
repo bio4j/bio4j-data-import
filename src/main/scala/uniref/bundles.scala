@@ -26,6 +26,11 @@ case object bundles {
     },
     baseDirectory = file"/media/ephemeral0/data/enzyme/",
     gunzip = true
-  )()
+  )() {
+
+    val uniref50  = baseDirectory / fileNames.uniref50
+    val uniref90  = baseDirectory / fileNames.uniref90
+    val uniref100 = baseDirectory / fileNames.uniref100
+  }
 
 }

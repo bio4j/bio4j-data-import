@@ -10,8 +10,9 @@ case object bundles {
   val release = "current_release"
 
   case object fileNames {
-    val sprot  = "uniprot_sprot.dat"  // 517MB gz
-    val trembl = "uniprot_trembl.dat" // 38.9GB gz
+    val sprot    = "uniprot_sprot.dat"            // 517MB gz
+    val trembl   = "uniprot_trembl.dat"           // 38.9GB gz
+    val varsplic = "uniprot_sprot_varsplic.fasta" // 7.7MB gz
   }
 
   // TODO: probably it's better to make 3 separate data and import bundles
@@ -24,6 +25,11 @@ case object bundles {
     },
     baseDirectory = file"/media/ephemeral0/data/enzyme/",
     gunzip = true
-  )()
+  )() {
+
+    val sprot    = baseDirectory / fileNames.sprot
+    val trembl   = baseDirectory / fileNames.trembl
+    val varsplic = baseDirectory / fileNames.varsplic
+  }
 
 }
