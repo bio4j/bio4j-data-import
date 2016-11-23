@@ -1,4 +1,4 @@
-name          := "import"
+name          := "release.generic"
 organization  := "bio4j"
 description   := "generic bio4j data import"
 
