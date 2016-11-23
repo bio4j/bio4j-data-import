@@ -10,7 +10,7 @@ import better.files._
 
 case object bundles {
 
-  val s3ReleasesPrefix = S3Folder("releases.bio4j.com", "2016_12_01")
+  val s3ReleasesPrefix = S3Folder("eu-west-1.raw.bio4j.com", "data/2016_11/")
 
   abstract class GetRawData(
     val urls: Seq[URL],

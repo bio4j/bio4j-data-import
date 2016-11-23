@@ -23,7 +23,7 @@ case object bundles {
 
   case object copyData extends CopyToS3(
     rawData.files,
-    s3ReleasesPrefix / "data" / "go" /
+    s3ReleasesPrefix / "go" /
   )()
 
   case object mirroredData extends GetS3Copy(

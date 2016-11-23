@@ -10,8 +10,8 @@ case object bundles {
   val release = "current_release"
 
   case object fileNames {
-    val sprot  = "uniprot_sprot.dat"   // 517MB gz
-    val trembl  = "uniprot_trembl.dat" // 38.9GB gz
+    val sprot  = "uniprot_sprot.dat"  // 517MB gz
+    val trembl = "uniprot_trembl.dat" // 38.9GB gz
   }
 
   // TODO: probably it's better to make 3 separate data and import bundles

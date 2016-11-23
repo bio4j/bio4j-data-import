@@ -25,7 +25,7 @@ case object bundles {
 
   case object copyData extends CopyToS3(
     Seq(rawData.nodes, rawData.names),
-    s3ReleasesPrefix / "data" / "ncbiTaxonomy" /
+    s3ReleasesPrefix / "ncbiTaxonomy" /
   )()
 
   case object mirroredData extends GetS3Copy(
