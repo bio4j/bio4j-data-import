@@ -1,10 +1,9 @@
-package com.bio4j.data.uniprot
+package com.bio4j.release.generic
 
 import com.bio4j.data._
 import com.bio4j.model._
 import com.bio4j.angulillos._
 import scala.compat.java8.OptionConverters._
-import bio4j.data.uniprot.flat.{ Entry => FEntry }
 import bio4j.data.uniprot._
 
 // from keywords-all.tsv
@@ -22,7 +21,7 @@ case class ImportUniProt[V,E](val graph: UniProtGraph[V,E]) {
     - keyword types
     - ...
   */
-  def dataFrom(e: FEntry, g: G): G = {
+  def dataFrom(e: AnyEntry, g: G): G = {
 
     val entryProteinAccession =
       e.accessionNumbers.primary
@@ -105,7 +104,7 @@ case class ImportUniProt[V,E](val graph: UniProtGraph[V,E]) {
       ### Protein comments
 
     */
-    val entryComments: Seq[Comment] = ??? // comments filterNot { x => x.isInstanceOf[Isoform] } // TODO enable isInstanceOf here
+    val entryComments: Seq[Comment] = comments filterNot { x => x.isInstanceOf[Isoform] } // TODO enable isInstanceOf here
     entryComments
       .map( cc =>
         g.comment.addVertex
@@ -145,7 +144,7 @@ case class ImportUniProt[V,E](val graph: UniProtGraph[V,E]) {
 
     Import the isoforms, and add isoforms edges from the entry protein to the isoforms described there. Needs the entry proteins imported before.
   */
-  def isoformsFrom(e: FEntry, g: G): G = {
+  def isoformsFrom(e: AnyEntry, g: G): G = {
 
     val isoforms =
       (e.comments collect { case i: Isoform => i })

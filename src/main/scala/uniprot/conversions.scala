@@ -1,4 +1,4 @@
-package com.bio4j.data.uniprot
+package com.bio4j.release.generic
 
 import com.bio4j.model._
 import com.bio4j.angulillos._
