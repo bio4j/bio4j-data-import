@@ -7,7 +7,7 @@ bucketSuffix  := "era7.com"
 scalaVersion := "2.11.8"
 
 libraryDependencies ++= Seq (
-  "bio4j"                   % "bio4j"               % "0.12.0-227-g60cce98",
+  "bio4j"                   % "bio4j"               % "0.12.0-241-g7d77986",
   // data parsers
   "bio4j"                  %% "data-uniprot"        % "0.2.0",
   "bio4j"                  %% "data-uniref"         % "0.2.0",

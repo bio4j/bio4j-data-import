@@ -183,18 +183,18 @@ case object conversions {
       case "intramembrane region"                 => UniProtGraph.FeatureTypes.intramembraneRegion
     }
 
-  val stringToKeywordCategory: String => UniProtGraph.KeywordCategories =
+  val stringToKeywordCategory: String => Option[UniProtGraph.KeywordCategories] =
     {
-      case "Biological process"         => UniProtGraph.KeywordCategories.biologicalProcess
-      case "Cellular component"         => UniProtGraph.KeywordCategories.cellularComponent
-      case "Coding sequence diversity"  => UniProtGraph.KeywordCategories.codingSequenceDiversity
-      case "Developmental stage"        => UniProtGraph.KeywordCategories.developmentalStage
-      case "Disease"                    => UniProtGraph.KeywordCategories.disease
-      case "Domain"                     => UniProtGraph.KeywordCategories.domain
-      case "Ligand"                     => UniProtGraph.KeywordCategories.ligand
-      case "Molecular function"         => UniProtGraph.KeywordCategories.molecularFunction
-      case "null"                       => UniProtGraph.KeywordCategories.NULL
-      case "PTM"                        => UniProtGraph.KeywordCategories.PTM
-      case "Technical term"             => UniProtGraph.KeywordCategories.technicalTerm
+      case "Biological process"         => Some(UniProtGraph.KeywordCategories.biologicalProcess)
+      case "Cellular component"         => Some(UniProtGraph.KeywordCategories.cellularComponent)
+      case "Coding sequence diversity"  => Some(UniProtGraph.KeywordCategories.codingSequenceDiversity)
+      case "Developmental stage"        => Some(UniProtGraph.KeywordCategories.developmentalStage)
+      case "Disease"                    => Some(UniProtGraph.KeywordCategories.disease)
+      case "Domain"                     => Some(UniProtGraph.KeywordCategories.domain)
+      case "Ligand"                     => Some(UniProtGraph.KeywordCategories.ligand)
+      case "Molecular function"         => Some(UniProtGraph.KeywordCategories.molecularFunction)
+      case "PTM"                        => Some(UniProtGraph.KeywordCategories.PTM)
+      case "Technical term"             => Some(UniProtGraph.KeywordCategories.technicalTerm)
+      case _                            => None
     }
 }

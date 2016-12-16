@@ -197,7 +197,8 @@ case class ImportUniProt[V,E](val graph: UniProtGraph[V,E]) {
       g.keyword.addVertex
         .set(g.keyword.id, row.id)
         .set(g.keyword.definition, row.description)
-        .set(g.keyword.category, conversions.stringToKeywordCategory(row.category))
+
+    conversions.stringToKeywordCategory(row.category).foreach { kwType.set(g.keyword.category, _) }
 
     g
   }

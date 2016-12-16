@@ -1,4 +1,4 @@
-package com.bio4j.data
+package com.bio4j.release.generic
 
 import com.bio4j.angulillos._
 import com.bio4j.model._
