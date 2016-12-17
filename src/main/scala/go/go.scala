@@ -1,123 +1,66 @@
-// package com.bio4j.release.generic.go
-//
-// import com.bio4j.data._
-// import com.bio4j.model._
-// import com.bio4j.angulillos._
-// import scala.xml._
-// import scala.compat.java8.OptionConverters._
-//
-// case class ImportProcess[V,E](val graph: GOGraph[V,E]) {
-//
-//   type G = GOGraph[V,E]
-//
-//   val terms =
-//     GraphProcess.generically[V,E] (
-//       graph,
-//       (ontology: Obo, g: G) =>
-//         (
-//           graph,
-//           ontology.terms.map { xmlTerm =>
-//             g.term.addVertex
-//               .set(g.term.id, xmlTerm.ID)
-//               .set(g.term.name, xmlTerm.name)
-//               .set(g.term.definition, xmlTerm.definition)
-//               .set(g.term.subOntology, toSubontologies(xmlTerm.namespace))
-//           }
-//         )
-//     )
-//
-//   val isA =
-//     GraphProcess.generically[V,E] (
-//       graph,
-//       (ontology: Obo, g: G) =>
-//         (
-//           graph,
-//           ontology.isA.map( rel =>
-//             sourceAndTarget(rel) map { case (source,target) =>
-//               g.isA.addEdge(source, target)
-//             }
-//           )
-//           .flatten
-//         )
-//     )
-//
-//   val partOf =
-//     GraphProcess.generically[V,E] (
-//       graph,
-//       (ontology: Obo, g: G) =>
-//         (
-//           graph,
-//           ontology.partOf.map( rel =>
-//             sourceAndTarget(rel) map { case (source,target) =>
-//               g.partOf.addEdge(source, target)
-//             }
-//           )
-//           .flatten
-//         )
-//     )
-//
-//   val regulates =
-//     GraphProcess.generically[V,E] (
-//       graph,
-//       (ontology: Obo, g: G) =>
-//         (
-//           graph,
-//           ontology.regulates.map( rel =>
-//             sourceAndTarget(rel) map { case (source,target) =>
-//               g.regulates.addEdge(source, target)
-//             }
-//           )
-//           .flatten
-//         )
-//     )
-//
-//   val positivelyRegulates =
-//     GraphProcess.generically[V,E] (
-//       graph,
-//       (ontology: Obo, g: G) =>
-//         (
-//           graph,
-//           ontology.positivelyRegulates.map( rel =>
-//             sourceAndTarget(rel) map { case (source,target) =>
-//               g.positivelyRegulates.addEdge(source, target)
-//             }
-//           )
-//           .flatten
-//         )
-//     )
-//
-//
-//   val negativelyRegulates =
-//     GraphProcess.generically[V,E] (
-//       graph,
-//       (ontology: Obo, g: G) =>
-//         (
-//           graph,
-//           ontology.negativelyRegulates.map( rel =>
-//             sourceAndTarget(rel) map { case (source,target) =>
-//               g.negativelyRegulates.addEdge(source, target)
-//             }
-//           )
-//           .flatten
-//         )
-//     )
-//
-//
-//   private def termByID(id: String) =
-//     graph.term.id.index.find(id).asScala
-//
-//   private def sourceAndTarget(rel: Rel): Option[(G#Term, G#Term)] =
-//     termByID(rel.sourceID).flatMap { source =>
-//       termByID(rel.targetID).map { target =>
-//         (source, target)
-//       }
-//     }
-//
-//   private def toSubontologies(namespace: String) =
-//     namespace match {
-//
-//       case "cellular_component" => GOGraph.Subontologies.cellularComponent
-//       case "biological_process" => GOGraph.Subontologies.biologicalProcess
-//       case "molecular_function" => GOGraph.Subontologies.molecularFunction
-//     }
-// }
+package com.bio4j.release.generic.go
+
+import com.bio4j.data.go._
+import com.bio4j.model._
+import com.bio4j.angulillos._
+import scala.compat.java8.OptionConverters._
+
+case class ImportGO[V,E](val graph: GOGraph[V,E]) {
+
+  type G = GOGraph[V,E]
+  def g: G = graph
+
+  def terms(ontology: AnyGO) =
+    ontology.terms.map { term =>
+      g.term.addVertex
+        .set(g.term.id, term.ID)
+        .set(g.term.name, term.name)
+        .set(g.term.definition, term.definition)
+        .set(g.term.subOntology, toSubontologies(term.namespace))
+    }
+
+  def isA(ontology: AnyGO): Seq[G#IsA] =
+    sourceAndTargets( ontology.isA ) map {
+      case (source,target) => g.isA.addEdge(source, target)
+    }
+
+  def partOf(ontology: AnyGO): Seq[G#PartOf] =
+    sourceAndTargets( ontology.partOf ) map {
+      case (source,target) => g.partOf.addEdge(source, target)
+    }
+
+  def regulates(ontology: AnyGO): Seq[G#Regulates] =
+    sourceAndTargets( ontology.regulates ) map {
+      case (source,target) => g.regulates.addEdge(source, target)
+    }
+
+  def positivelyRegulates(ontology: AnyGO): Seq[G#PositivelyRegulates] =
+    sourceAndTargets( ontology.positivelyRegulates ) map {
+      case (source,target) => g.positivelyRegulates.addEdge(source, target)
+    }
+
+  def negativelyRegulates(ontology: AnyGO): Seq[G#NegativelyRegulates] =
+    sourceAndTargets( ontology.negativelyRegulates ) map {
+      case (source,target) => g.negativelyRegulates.addEdge(source, target)
+    }
+
+  private def termByID(id: String) =
+    g.term.id.index.find(id).asScala
+
+  private def sourceAndTarget(rel: AnyRel): Option[(G#Term, G#Term)] =
+    termByID(rel.sourceID).flatMap { source =>
+      termByID(rel.targetID).map { target =>
+        (source, target)
+      }
+    }
+
+  private def sourceAndTargets(rels: Seq[AnyRel]): Seq[(G#Term, G#Term)] =
+    rels collect Function.unlift(sourceAndTarget)
+
+  private def toSubontologies(namespace: Namespace) =
+    namespace match {
+      case `cellular_component` => GOGraph.Subontologies.cellularComponent
+      case `biological_process` => GOGraph.Subontologies.biologicalProcess
+      case `molecular_function` => GOGraph.Subontologies.molecularFunction
+    }
+}
