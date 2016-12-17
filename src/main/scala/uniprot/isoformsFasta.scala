@@ -1,4 +1,4 @@
-package com.bio4j.data.uniprot
+package com.bio4j.release.generic
 
 import ohnosequences.fastarious._, fasta._
 

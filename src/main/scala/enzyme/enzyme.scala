@@ -1,104 +1,74 @@
-package com.bio4j.data.enzyme
+package com.bio4j.release.generic.enzyme
 
-import com.bio4j.data._
+import com.bio4j.release.generic._
 import com.bio4j.model._
 import com.bio4j.angulillos._
+import com.bio4j.data.enzyme._
 import scala.compat.java8.OptionConverters._
 
-case class Process[V,E](val graph: ENZYMEGraph[V,E]) {
+case class ImportEnzyme[V,E](val graph: ENZYMEGraph[V,E]) {
 
+  // just an alias for convenience
   type G = ENZYMEGraph[V,E]
+  def g: G = graph
 
-  // first import all classes
-  val enzymeClasses =
-    GraphProcess.generically[V,E] (
-      graph,
-      (enzClass: EnzymeClass, g: G) =>
-        (
-          graph,
-          if(enzClass.ID.isClass)
-            Some(
-              g.enzymeClass.addVertex
-                .set(g.enzymeClass.id, enzClass.ID.value)
-            )
-          else
-            None
-        )
-    )
+  /* Enzyme classes need to be imported first */
+  def enzymeClass(enzClass: EnzymeClass): G#EnzymeClass =
+    g.enzymeClass.addVertex
+      .set(g.enzymeClass.id, enzClass.ID)
 
-  // needs all classes imported
-  val enzymeSubClasses =
-    GraphProcess.generically[V,E] (
-      graph,
-      (enzClass: EnzymeClass, g: G) =>
-        (
-          graph,
+  /* Subclasses require classes to be already imported */
+  def enzymeSubClass(enzSubClass: EnzymeSubClass): G#EnzymeSubClass = {
 
-          if(enzClass.ID.isSubClass) {
+    val subClass =
+      g.enzymeSubClass.addVertex
+        .set(g.enzymeSubClass.id, enzSubClass.ID)
 
-            val subClass =
-              g.enzymeSubClass.addVertex
-                .set(g.enzymeSubClass.id, enzClass.ID.value)
+    // TODO add it to data.enzyme
+    // val toClass =
+    //   findClass(g, enzClass.classID) map { clss =>
+    //     ( subClass, g.subClasses.addEdge(clss, subClass) )
+    //   }
 
-            findClass(g, enzClass.ID.classID) map { clss =>
-              ( subClass, g.subClasses.addEdge(clss, subClass) )
-            }
-          }
-          else
-            None
-        )
-    )
+    subClass
+  }
 
-  // needs all subclasses imported
-  val enzymeSubSubClasses =
-    GraphProcess.generically[V,E] (
-      graph,
-      (enzClass: EnzymeClass, g: G) =>
-        (
-          graph,
+  /* Subsubclasses need all subclasses already imported */
+  def enzymeSubSubClass(enzSubSubClass: EnzymeSubSubClass): G#EnzymeSubSubClass = {
 
-          if(enzClass.ID.isSubSubClass) {
+    val subSubClass =
+      g.enzymeSubSubClass.addVertex
+        .set(g.enzymeSubSubClass.id, enzSubSubClass.ID)
 
-            val subSubClass =
-              g.enzymeSubSubClass.addVertex
-                .set(g.enzymeSubSubClass.id, enzClass.ID.value)
+    // TODO add it to data.enzyme
+    // val toSubClass =
+    //   findSubClass(g, enzClass.subClassID) map { subClass =>
+    //     ( subSubClass, g.subSubClasses.addEdge(subClass, subSubClass) )
+    //   }
 
-            findSubClass(g, enzClass.ID.subClassID) map { subClass =>
-              ( subSubClass, g.subSubClasses.addEdge(subClass, subSubClass) )
-            }
-          }
-          else
-            None
-        )
-    )
+    subSubClass
+  }
 
-  // needs subsubclasses first
-  val enzymes =
-    GraphProcess.generically[V,E] (
-      graph,
-      (entry: Entry, g: G) =>
-        (
-          graph,
-          {
-            val enzyme = g.enzyme.addVertex
-              .set(g.enzyme.id, entry.ID.value)
-              .set(g.enzyme.name, entry.description)
-              .set(g.enzyme.alternateNames, entry.alternativeNames.toArray)
-              .set(g.enzyme.cofactors, entry.cofactors.toArray)
-              .set(g.enzyme.comments, entry.comments)
-              .set(g.enzyme.catalyticActivity, entry.catalyticActivity)
+  /* Enzymes need all subsubclasses already imported */
+  def enzyme(entry: AnyEntry): (G#Enzyme, Option[G#Enzymes]) = {
 
-            val subsubclass =
-              findSubSubClass( g, entry.ID.subSubClassID )
+    val enzyme =
+      g.enzyme.addVertex
+        .set(g.enzyme.id, entry.ID)
+        .set(g.enzyme.name, entry.description)
+        .set(g.enzyme.alternateNames, entry.alternativeNames.toArray)
+        .set(g.enzyme.cofactors, entry.cofactors.toArray)
+        .set(g.enzyme.comments, entry.comments.mkString(" "))
+        .set(g.enzyme.catalyticActivity, entry.catalyticActivity)
 
-            val memberOf = subsubclass.foreach { ssc =>
-              g.enzymes.addEdge(ssc, enzyme)
-            }
+    val subsubclass =
+      findSubSubClass( g, entry.subSubClassID )
 
-            (enzyme, memberOf)
-          }
-        )
-    )
+    val memberOf =
+      subsubclass.map { g.enzymes.addEdge(_, enzyme) }
+
+    (enzyme, memberOf)
+  }
 
   private def findClass(g: G, id: String): Option[G#EnzymeClass] =
     g.enzymeClass.id.index.find(id).asScala

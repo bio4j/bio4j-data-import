@@ -1,38 +1,36 @@
-package com.bio4j.data.uniprotGO
+package com.bio4j.release.generic.uniProtGO
 
-import com.bio4j.data._
+import bio4j.data.uniprot._
 import com.bio4j.model._
-import com.bio4j.angulillos._
 import scala.compat.java8.OptionConverters._
-import uniprot.Entry
 
-case class Process[V,E](val graph: UniProtGOGraph[V,E]) {
+case class ImportUniProtGO[V,E](val graph: UniProtGOGraph[V,E]) {
 
   type G = UniProtGOGraph[V,E]
+  def g: G = graph
 
-  val goAnnotations =
-    GraphProcess.generically[V,E] (
-      graph,
-      (entry: Entry, g: G) =>
-        (
-          graph,
-          {
+  def goAnnotations(entry: AnyEntry) = {
 
-            val goTerms =
-              entry.dbReferenceIDs(tpe = "GO")
-                .map( id => g.goGraph.term.id.index.find(id).asScala )
-                .flatten
+      val goTermIDs =
+        entry.databaseCrossReferences.collect {
+          case DatabaseCrossReference(resource, id) =>
+            resource match {
+              case GO => id
+            }
+        }
 
-            val canonicalProtein =
-              g.uniProtGraph.protein.accession.index.find(entry.accession).asScala
+      findProtein(entry.accessionNumbers.primary) map { protein =>
 
-            goTerms.map( term =>
-                canonicalProtein.map { p =>
-                  g.annotation.addEdge(p, term)
-                }
-              )
-              .flatten
+        goTermIDs.collect { scala.Function.unlift { termID =>
+            findTerm(termID) map { g.annotation.addEdge(protein, _) }
           }
-        )
-    )
+        }
+      }
+    }
+
+  private def findTerm(id: String) =
+    g.goGraph.term.id.index.find(id).asScala
+
+  private def findProtein(accession: String) =
+    g.uniProtGraph.protein.accession.index.find(accession).asScala
 }
