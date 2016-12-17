@@ -2,7 +2,6 @@ package com.bio4j.release.generic.go
 
 import com.bio4j.data.go._
 import com.bio4j.model._
-import com.bio4j.angulillos._
 import scala.compat.java8.OptionConverters._
 
 case class ImportGO[V,E](val graph: GOGraph[V,E]) {

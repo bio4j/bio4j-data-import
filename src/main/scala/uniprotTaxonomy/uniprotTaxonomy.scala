@@ -1,50 +1,41 @@
-// package com.bio4j.data.uniprotTaxonomy
-//
-// import com.bio4j.data._
-// import com.bio4j.model._
-// import com.bio4j.angulillos._
-// import scala.xml._
-// import scala.compat.java8.OptionConverters._
-//
-// case class Process[V,E](val graph: UniProtNCBITaxonomyGraph[V,E]) {
-//
-//   type G = UniProtNCBITaxonomyGraph[V,E]
-//
-//   val taxonomyAnnotations =
-//     GraphProcess.generically[V,E] (
-//       graph,
-//       (entry: EntryTaxonomyAnnotations, g: G) =>
-//         (
-//           graph,
-//           {
-//
-//             val canonicalProtein =
-//               g.uniProtGraph.protein.accession.index.find(entry.accession).asScala
-//
-//             val organism =
-//               g.ncbiTaxonomyGraph.taxon.id.index.find(entry.organism).asScala
-//
-//             val organismEdge = canonicalProtein.foreach { p =>
-//               organism.foreach { t =>
-//                 g.organism.addEdge(p, t)
-//               }
-//             }
-//
-//             val hosts =
-//               entry.hosts.map(
-//                 host => g.ncbiTaxonomyGraph.taxon.id.index.find(host).asScala
-//               )
-//               .flatten
-//
-//             val hostEdges =
-//               hosts.foreach { h =>
-//                 canonicalProtein.foreach { p =>
-//                   g.host.addEdge(p,h)
-//                 }
-//               }
-//
-//             (organismEdge, hostEdges)
-//           }
-//         )
-//     )
-// }
+package com.bio4j.release.generic.uniprotTaxonomy
+
+import bio4j.data.uniprot._
+import com.bio4j.model._
+import scala.compat.java8.OptionConverters._
+
+case class ImportUniprotTaxonomyAnnotations[V,E](val graph: UniProtNCBITaxonomyGraph[V,E]) {
+
+  type G = UniProtNCBITaxonomyGraph[V,E]
+  def g: G = graph
+
+  def taxonomyAnnotations(entry: AnyEntry) =
+    findProtein(entry.accessionNumbers.primary) flatMap { protein =>
+
+
+    val organismEdge =
+      findTaxon(entry.taxonomyCrossReference.taxonID) map {
+        g.organism.addEdge(protein, _)
+      }
+
+    val hosts =
+      entry.organismHost.map(
+        crossRef => g.ncbiTaxonomyGraph.taxon.id.index.find(crossRef.taxonID).asScala
+      )
+      .flatten
+
+    val hostEdges =
+      entry.organismHost
+        .collect(scala.Function.unlift { crossRef => findTaxon(crossRef.taxonID) })
+        .map { g.host.addEdge(protein,_) }
+
+    for (e <- organismEdge) yield (e,hostEdges)
+  }
+
+  private def findProtein(accession: String) =
+    g.uniProtGraph.protein.accession.index.find(accession).asScala
+
+  private def findTaxon(taxonID: String) =
+    g.ncbiTaxonomyGraph.taxon.id.index.find(taxonID).asScala
+
+}
