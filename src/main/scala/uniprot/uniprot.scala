@@ -127,6 +127,21 @@ case class ImportUniProt[V,E](val graph: UniProtGraph[V,E]) {
     (e, newGeneNames)
   }
 
+  def keywords(e: AnyEntry, entryProtein: G#Protein): (AnyEntry, Seq[G#Keywords]) = {
+
+    val keywords =
+      e.keywords
+
+    val keywordEdges =
+      keywords collect {
+        scala.Function.unlift { kw =>
+          g.keyword.id.index.find(kw.id).asScala.map { g.keywords.addEdge(entryProtein, _) }
+        }
+      }
+
+    (e, keywordEdges)
+  }
+
 
 
 
