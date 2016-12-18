@@ -184,26 +184,14 @@ case class ImportUniProt[V,E](val graph: UniProtGraph[V,E]) {
     (e, annotationVertices)
   }
 
-  /*
-    ## Isoform sequences
-  */
-  def isoformSequencesFrom(fasta: IsoformFasta, g: G): G = {
-
-    g.protein.id.index.find(fasta.proteinID).asScala.foreach { isoform =>
-
-      val seq =
-        fasta.sequence
-
-      val isoformWithSeq =
-        isoform
-          .set(g.protein.sequence, seq)
-          .set(g.protein.sequenceLength, seq.length: java.lang.Integer)
+  def isoformSequencesFrom(fasta: IsoformFasta): Option[G#Protein] =
+    g.protein.id.index.find(fasta.proteinID).asScala.map { isoform =>
+      isoform
+        .set(g.protein.sequence, fasta.sequence)
+        .set(g.protein.sequenceLength, fasta.sequence.length: java.lang.Integer)
     }
 
-    g
-  }
-
-  def keywordTypesFrom(row: KeywordRow, g: G): G = {
+  def keywordTypes(row: KeywordRow): G#Keyword = {
 
     val kwType =
       g.keyword.addVertex
@@ -212,6 +200,6 @@ case class ImportUniProt[V,E](val graph: UniProtGraph[V,E]) {
 
     conversions.stringToKeywordCategory(row.category).foreach { kwType.set(g.keyword.category, _) }
 
-    g
+    kwType
   }
 }
