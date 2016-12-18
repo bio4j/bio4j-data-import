@@ -12,6 +12,102 @@ case class KeywordRow(val id: String, val description: String, val category: Str
 case class ImportUniProt[V,E](val graph: UniProtGraph[V,E]) {
 
   type G = UniProtGraph[V,E]
+  def g: G = graph
+
+  /*
+    This method imports the entry canonical protein *and* all isoforms, adding *isoforms* edges between them. All properties of the canonical protein are set, while for isoforms *sequences* are missing: they are imported from a separate fasta file.
+  */
+  def allProteins(e: AnyEntry): (AnyEntry, G#Protein, Seq[G#Protein]) = {
+
+    val entryProteinAccession =
+      e.accessionNumbers.primary
+
+    // we need comments first, as isoforms are always there
+    val comments =
+      e.comments
+
+    val isoformComments =
+      comments collect { case i: Isoform => i }
+
+    val entryProteinID =
+      isoformComments.filter(_.isEntry).headOption.fold(entryProteinAccession)(_.id)
+
+    // either there's a recommended name or a submitted name
+    val entryProteinFullName =
+      e.description.recommendedName
+        .fold(e.description.submittedNames.head.full)(_.full)
+
+    val dataset =
+      conversions.statusToDatasets( e.identification.status )
+
+    val existence =
+      conversions.proteinExistenceToExistenceEvidence( e.proteinExistence )
+
+    /* All protein properties are set at this point: */
+    val entryProtein =
+      g.protein.addVertex
+        .set(g.protein.id,              entryProteinID)
+        .set(g.protein.accession,       entryProteinAccession)
+        .set(g.protein.fullName,        entryProteinFullName)
+        .set(g.protein.dataset,         dataset)
+        .set(g.protein.sequence,        e.sequence.value)
+        .set(g.protein.sequenceLength,  e.sequenceHeader.length: Integer )
+        .set(g.protein.mass,            e.sequenceHeader.molecularWeight: Integer)
+
+    val isoforms =
+      isoformComments filterNot { _.isEntry }
+
+    // only newly imported isoform vertices are here
+    val isoformVertices =
+      isoforms collect {
+        scala.Function.unlift { isoform =>
+
+          val findIsoform =
+            g.protein.id.index.find(isoform.id).asScala
+
+          findIsoform.fold[Option[G#Protein]]({
+            // need to add the new isoform
+            val isoformV =
+              g.protein.addVertex
+                .set(g.protein.id, isoform.id)
+                .set(g.protein.fullName, s"${e.description.recommendedName.fold(e.description.submittedNames.head.full)(_.full)} ${isoform.name}")
+
+            val edge = g.isoforms.addEdge(entryProtein, isoformV)
+            Some(isoformV)
+          })(
+            // already there; add an edge from the current entry protein
+            isoformV => { g.isoforms.addEdge(entryProtein, isoformV); None }
+          )
+        }
+      }
+
+    (e, entryProtein, isoformVertices)
+  }
+
+  def geneNames(e: AnyEntry, entryProtein: G#Protein): (AnyEntry, Seq[G#GeneName]) = {
+
+    ???
+  }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
   /*
     ## UniProt entry data
