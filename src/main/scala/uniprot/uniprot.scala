@@ -142,7 +142,47 @@ case class ImportUniProt[V,E](val graph: UniProtGraph[V,E]) {
     (e, keywordEdges)
   }
 
+  def comments(e: AnyEntry, entryProtein: G#Protein): (AnyEntry, Seq[G#Comment]) = {
 
+    val entryComments: Seq[Comment] =
+      e.comments filterNot { x => x.isInstanceOf[Isoform] }
+
+    val commentVertices =
+      entryComments map { cc =>
+        val comment = g.comment.addVertex
+          .set(g.comment.topic, conversions.commentTopic(cc))
+          .set(g.comment.text,  cc.asInstanceOf[{ val text: String }].text) // TODO needs bio4j/data.uniprot#19 or something similar
+
+        g.comments.addEdge(entryProtein, comment)
+        comment
+      }
+
+    (e, commentVertices)
+  }
+
+  def features(e: AnyEntry, entryProtein: G#Protein): (AnyEntry, Seq[G#Annotation]) = {
+
+    val entryFeatures =
+      e.features
+
+    val annotationVertices =
+      entryFeatures map { ft =>
+
+        val annotationV =
+          g.annotation.addVertex
+            .set(g.annotation.featureType, conversions.featureKeyToFeatureType(ft.key))
+            .set(g.annotation.description, ft.description)
+
+        val annotationE =
+          g.annotations.addEdge(entryProtein, annotationV)
+            .set(g.annotations.begin, conversions.featureFromAsInt(ft.from): Integer)
+            .set(g.annotations.end, conversions.featureToAsInt(ft.to): Integer)
+
+        annotationV
+      }
+
+    (e, annotationVertices)
+  }
 
 
 
