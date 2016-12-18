@@ -16,6 +16,8 @@ case class ImportUniProt[V,E](val graph: UniProtGraph[V,E]) {
 
   /*
     This method imports the entry canonical protein *and* all isoforms, adding *isoforms* edges between them. All properties of the canonical protein are set, while for isoforms *sequences* are missing: they are imported from a separate fasta file.
+
+    The return value corresponds to `(e, entryProtein, isoforms)`.
   */
   def allProteins(e: AnyEntry): (AnyEntry, G#Protein, Seq[G#Protein]) = {
 
@@ -84,9 +86,45 @@ case class ImportUniProt[V,E](val graph: UniProtGraph[V,E]) {
     (e, entryProtein, isoformVertices)
   }
 
+  private def validGeneNames(gns: Seq[GeneName]): Seq[String] =
+    gns collect {
+      scala.Function.unlift { gn =>
+        gn.name.fold(gn.ORFNames.headOption)(n => Some(n.official))
+      }
+    }
+
+  /* **IMPORTANT** `e` is assumed to be the entry corresponding to `entryProtein` */
   def geneNames(e: AnyEntry, entryProtein: G#Protein): (AnyEntry, Seq[G#GeneName]) = {
 
-    ???
+    val geneNames: Seq[String] =
+      validGeneNames(e.geneNames)
+
+    val newGeneNames = geneNames collect {
+      scala.Function.unlift { name =>
+
+        val present =
+          g.geneName.name.index.find(name)
+            .asScala
+
+        present.fold[Option[G#GeneName]]({
+            val newGeneName =
+              g.geneName.addVertex
+                .set(g.geneName.name, name)
+
+            val edge = g.geneProducts.addEdge(newGeneName, entryProtein)
+            Some(newGeneName)
+          }
+        )(
+          // gene name vertex present, only add edge
+          geneName => {
+            g.geneProducts.addEdge(geneName, entryProtein)
+            None
+          }
+        )
+      }
+    }
+
+    (e, newGeneNames)
   }
 
 
