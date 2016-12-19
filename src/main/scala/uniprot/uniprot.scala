@@ -12,29 +12,29 @@ case class KeywordRow(val id: String, val description: String, val category: Str
 case class ImportUniProt[V,E](val graph: UniProtGraph[V,E]) {
 
   type G = UniProtGraph[V,E]
+  def g: G = graph
+
+  /* This class represents pairs of entries and the corresponding canonical protein */
+  case class EntryProtein(val entry: AnyEntry, val protein: G#Protein)
 
   /*
-    ## UniProt entry data
+    This method imports the entry canonical protein *and* all isoforms, adding *isoforms* edges between them. All properties of the canonical protein are set, while for isoforms *sequences* are missing: they are imported from a separate fasta file.
 
-    Here we import all data that is derived from one UniProt entry. This method assumes that the following has been already imported:
-
-    - keyword types
-    - ...
+    The return value corresponds to `(e, entryProtein, isoforms)`.
   */
-  def dataFrom(e: AnyEntry, g: G): G = {
+  def allProteins(e: AnyEntry): (EntryProtein, Seq[G#Protein]) = {
 
     val entryProteinAccession =
       e.accessionNumbers.primary
 
-    // we need comments first, as isoforms are always there
-    val comments =
-      e.comments
-
-    val isoforms =
-      comments collect { case i: Isoform => i }
+    val isoformComments =
+      e.comments collect { case i: Isoform => i }
 
     val entryProteinID =
-      isoforms.filter(_.isEntry).headOption.fold(entryProteinAccession)(_.id)
+      isoformComments.filter(_.isEntry).headOption.fold(entryProteinAccession)(_.id)
+
+    val isoforms =
+      isoformComments filterNot { _.isEntry }
 
     // either there's a recommended name or a submitted name
     val entryProteinFullName =
@@ -47,9 +47,7 @@ case class ImportUniProt[V,E](val graph: UniProtGraph[V,E]) {
     val existence =
       conversions.proteinExistenceToExistenceEvidence( e.proteinExistence )
 
-    /*
-      All protein properties are set at this point:
-    */
+    /* All protein properties are set at this point: */
     val entryProtein =
       g.protein.addVertex
         .set(g.protein.id,              entryProteinID)
@@ -60,138 +58,129 @@ case class ImportUniProt[V,E](val graph: UniProtGraph[V,E]) {
         .set(g.protein.sequenceLength,  e.sequenceHeader.length: Integer )
         .set(g.protein.mass,            e.sequenceHeader.molecularWeight: Integer)
 
-    /*
+    // only newly imported isoform vertices are here
+    val isoformVertices =
+      isoforms collect {
+        scala.Function.unlift { isoform =>
 
-      ### Gene names and their edges
+          g.protein.id.index.find(isoform.id).asScala
+            .fold[Option[G#Protein]]({
+              // need to add the new isoform
+              val isoformV =
+                g.protein.addVertex
+                  .set(g.protein.id, isoform.id)
+                  .set(g.protein.fullName, s"${e.description.recommendedName.fold(e.description.submittedNames.head.full)(_.full)} ${isoform.name}")
 
-      Gene names are ...
-    */
-    val geneNames =
-      e.geneNames
-        .map( gn =>
-          gn.name.fold(gn.ORFNames.headOption)(n => Some(n.official))
+              val edge = g.isoforms.addEdge(entryProtein, isoformV)
+              Some(isoformV)
+            })(
+              // already there; add an edge from the current entry protein
+              isoformV => { g.isoforms.addEdge(entryProtein, isoformV); None }
+            )
+        }
+      }
+
+    (EntryProtein(e, entryProtein), isoformVertices)
+  }
+
+  def geneNames(entryProtein: EntryProtein): (EntryProtein, Seq[G#GeneName]) = {
+
+    val geneNames: Seq[String] =
+      validGeneNames(entryProtein.entry.geneNames)
+
+    val newGeneNames = geneNames collect {
+      scala.Function.unlift { name =>
+
+        val present =
+          g.geneName.name.index.find(name)
+            .asScala
+
+        present.fold[Option[G#GeneName]]({
+            val newGeneName =
+              g.geneName.addVertex
+                .set(g.geneName.name, name)
+
+            val edge = g.geneProducts.addEdge(newGeneName, entryProtein.protein)
+            Some(newGeneName)
+          }
+        )(
+          // gene name vertex present, only add edge
+          geneName => {
+            g.geneProducts.addEdge(geneName, entryProtein.protein)
+            None
+          }
         )
-        .flatten
-
-    geneNames.foreach { n =>
-
-      val gn =
-        g.geneName.name.index.find(n)
-          .asScala
-          .getOrElse( g.geneName.addVertex )
-          .set(g.geneName.name, n)
-
-      // add edges
-      g.geneProducts.addEdge(gn, entryProtein)
-        // .setProperty(g.geneProducts, ???) // gene locations?
+      }
     }
 
-    /*
-      ### Protein keywords
+    (entryProtein, newGeneNames)
+  }
 
-      This needs the keyword types beforehand.
-    */
+  def keywords(entryProtein: EntryProtein): (EntryProtein, Seq[G#Keywords]) = {
+
     val keywords =
-      e.keywords
+      entryProtein.entry.keywords
 
-    keywords.foreach { kw =>
-      g.keyword.id.index.find(kw.id).asScala.foreach { kwt =>
-        g.keywords.addEdge(entryProtein, kwt)
+    val keywordEdges =
+      keywords collect {
+        scala.Function.unlift { kw =>
+          g.keyword.id.index.find(kw.id).asScala.map { g.keywords.addEdge(entryProtein.protein, _) }
+        }
       }
-    }
 
-    /*
-      ### Protein comments
+    (entryProtein, keywordEdges)
+  }
 
-    */
-    val entryComments: Seq[Comment] = comments filterNot { x => x.isInstanceOf[Isoform] } // TODO enable isInstanceOf here
-    entryComments
-      .map( cc =>
-        g.comment.addVertex
+  def comments(entryProtein: EntryProtein): (EntryProtein, Seq[G#Comment]) = {
+
+    val entryComments: Seq[Comment] =
+      entryProtein.entry.comments filterNot { x => x.isInstanceOf[Isoform] }
+
+    val commentVertices =
+      entryComments map { cc =>
+        val comment = g.comment.addVertex
           .set(g.comment.topic, conversions.commentTopic(cc))
-          // .set(g.comment.text,  cc.text) // TODO needs bio4j/data.uniprot#19 or something similar
-      )
-      .foreach { cv =>
-        g.comments.addEdge(entryProtein, cv)
-      }
-    /*
-      ### Protein annotations
+          .set(g.comment.text,  cc.asInstanceOf[{ val text: String }].text) // TODO needs bio4j/data.uniprot#19 or something similar
 
-    */
-      val proteinOpt =
-        graph.protein.accession.index.find( e.accessionNumbers.primary ).asScala
-
-      proteinOpt.foreach { protein =>
-
-        e.features foreach { feature =>
-
-          val annotation =
-            g.annotation.addVertex
-              .set(g.annotation.featureType, conversions.featureKeyToFeatureType(feature.key))
-              .set(g.annotation.description, feature.description)
-
-          g.annotations.addEdge(protein, annotation)
-            .set(g.annotations.begin, conversions.featureFromAsInt(feature.from): Integer)
-            .set(g.annotations.end, conversions.featureToAsInt(feature.to): Integer)
-        }
+        g.comments.addEdge(entryProtein.protein, comment)
+        comment
       }
 
-    g
+    (entryProtein, commentVertices)
   }
 
-  /*
-    ## Isoforms
+  def features(entryProtein: EntryProtein): (EntryProtein, Seq[G#Annotation]) = {
 
-    Import the isoforms, and add isoforms edges from the entry protein to the isoforms described there. Needs the entry proteins imported before.
-  */
-  def isoformsFrom(e: AnyEntry, g: G): G = {
+    val entryFeatures =
+      entryProtein.entry.features
 
-    val isoforms =
-      (e.comments collect { case i: Isoform => i })
-      .filterNot(_.isEntry)
+    val annotationVertices =
+      entryFeatures map { ft =>
 
-    val maybeEntryProtein = g.protein.accession.index.find(e.accessionNumbers.primary).asScala
+        val annotationV =
+          g.annotation.addVertex
+            .set(g.annotation.featureType, conversions.featureKeyToFeatureType(ft.key))
+            .set(g.annotation.description, ft.description)
 
-    isoforms foreach { isoform =>
+        val annotationE =
+          g.annotations.addEdge(entryProtein.protein, annotationV)
+            .set(g.annotations.begin, conversions.featureFromAsInt(ft.from): Integer)
+            .set(g.annotations.end, conversions.featureToAsInt(ft.to): Integer)
 
-      g.protein.id.index.find(isoform.id).asScala.fold(
-        { // need to add the new isoform
-          val isoformV = g.protein.addVertex
-            .set(g.protein.id, isoform.id)
-            .set(g.protein.fullName, s"${e.description.recommendedName
-              .fold(e.description.submittedNames.head.full)(_.full)} ${isoform.name}")
-
-          maybeEntryProtein.foreach { protein => g.isoforms.addEdge(protein, isoformV) }
-        }
-      ){ // already there; add an edge from the current entry protein
-        isoform =>
-          maybeEntryProtein.foreach { protein => g.isoforms.addEdge(protein, isoform) }
+        annotationV
       }
+
+    (entryProtein, annotationVertices)
+  }
+
+  def isoformSequencesFrom(fasta: IsoformFasta): Option[G#Protein] =
+    g.protein.id.index.find(fasta.proteinID).asScala.map { isoform =>
+      isoform
+        .set(g.protein.sequence, fasta.sequence)
+        .set(g.protein.sequenceLength, fasta.sequence.length: java.lang.Integer)
     }
 
-    g
-  }
-
-  /*
-    ## Isoform sequences
-  */
-  def isoformSequencesFrom(fasta: IsoformFasta, g: G): G = {
-
-    g.protein.id.index.find(fasta.proteinID).asScala.foreach { isoform =>
-
-      val seq =
-        fasta.sequence
-
-      val isoformWithSeq =
-        isoform
-          .set(g.protein.sequence, seq)
-          .set(g.protein.sequenceLength, seq.length: java.lang.Integer)
-    }
-
-    g
-  }
-
-  def keywordTypesFrom(row: KeywordRow, g: G): G = {
+  def keywordTypes(row: KeywordRow): G#Keyword = {
 
     val kwType =
       g.keyword.addVertex
@@ -200,6 +189,13 @@ case class ImportUniProt[V,E](val graph: UniProtGraph[V,E]) {
 
     conversions.stringToKeywordCategory(row.category).foreach { kwType.set(g.keyword.category, _) }
 
-    g
+    kwType
   }
+
+  private def validGeneNames(gns: Seq[GeneName]): Seq[String] =
+    gns collect {
+      scala.Function.unlift { gn =>
+        gn.name.fold(gn.ORFNames.headOption)(n => Some(n.official))
+      }
+    }
 }
