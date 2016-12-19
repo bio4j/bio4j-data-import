@@ -1,7 +1,6 @@
 package com.bio4j.release.generic
 
 import com.bio4j.model._
-import com.bio4j.angulillos._
 import scala.compat.java8.OptionConverters._
 import bio4j.data.uniprot._
 
@@ -87,7 +86,35 @@ case object conversions {
 
   def commentTopic(c: Comment): UniProtGraph.CommentTopics =
     c match {
-      case _ => ???
+      case Isoform(_,_,_)                   => UniProtGraph.CommentTopics.alternativeProducts
+      case Allergen(_)                      => UniProtGraph.CommentTopics.allergen
+      case BiophysicochemicalProperties(_)  => UniProtGraph.CommentTopics.biophysicochemicalProperties
+      case Biotechnology(_)                 => UniProtGraph.CommentTopics.biotechnology
+      case CatalyticActivity(_)             => UniProtGraph.CommentTopics.catalyticActivity
+      case Caution(_)                       => UniProtGraph.CommentTopics.caution
+      case Cofactor(_)                      => UniProtGraph.CommentTopics.cofactor
+      case DevelopmentalStage(_)            => UniProtGraph.CommentTopics.developmentalStage
+      case Disease(_)                       => UniProtGraph.CommentTopics.disease
+      case DisruptionPhenotype(_)           => UniProtGraph.CommentTopics.disruptionPhenotype
+      case Domain(_)                        => UniProtGraph.CommentTopics.domain
+      case EnzymeRegulation(_)              => UniProtGraph.CommentTopics.enzymeRegulation
+      case Function(_)                      => UniProtGraph.CommentTopics.function
+      case Induction(_)                     => UniProtGraph.CommentTopics.induction
+      case Interaction(_)                   => UniProtGraph.CommentTopics.interaction
+      case MassSpectrometry(_)              => UniProtGraph.CommentTopics.massSpectrometry
+      case Miscellaneous(_)                 => UniProtGraph.CommentTopics.miscellaneous
+      case Pathway(_)                       => UniProtGraph.CommentTopics.pathway
+      case Pharmaceutical(_)                => UniProtGraph.CommentTopics.pharmaceutical
+      case Polymorphism(_)                  => UniProtGraph.CommentTopics.polymorphism
+      case PTM(_)                           => UniProtGraph.CommentTopics.PTM
+      case RNAEditing(_)                    => UniProtGraph.CommentTopics.RNAEditing
+      case SequenceCaution(_)               => UniProtGraph.CommentTopics.sequenceCaution
+      case Similarity(_)                    => UniProtGraph.CommentTopics.similarity
+      case SubcellularLocation(_)           => UniProtGraph.CommentTopics.subcellularLocation
+      case Subunit(_)                       => UniProtGraph.CommentTopics.subunit
+      case TissueSpecificity(_)             => UniProtGraph.CommentTopics.tissueSpecificity
+      case ToxicDose(_)                     => UniProtGraph.CommentTopics.toxicDose
+      case WebResource(_)                   => UniProtGraph.CommentTopics.onlineInformation
     }
 
 
